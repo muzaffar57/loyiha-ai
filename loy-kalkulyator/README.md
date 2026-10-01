@@ -1,18 +1,20 @@
 # Penoplast profili — loy sarfi
 
-DXF kesim chizmasidan penoplast (ko'pik) profiliga ketadigan loy (qoplama) massasini hisoblaydigan Streamlit dastur.
+DXF kesim chizmasidan penoplast (ko'pik) profiliga ketadigan loy (qoplama) massasini hisoblaydigan desktop dastur. Oyna shu kompyuterda ochiladi. Brauzer kerak emas.
 
 Bu papka alohida asbob. Logistika platformasi (`app/`, `webapp/`, Docker) ga tegmaydi.
 
-## O'rnatish va ishga tushirish
+## Ishga tushirish
+
+Python 3 kerak. Windowsda [python.org](https://www.python.org/downloads/) o'rnatgichi **tkinter** ni o'zi bilan olib keladi (o'rnatishda "tcl/tk and IDLE" belgilangan bo'lsin).
 
 ```bash
 cd loy-kalkulyator
-python -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
-streamlit run app.py
+python desktop.py
 ```
+
+Windowsda `ishga-tushir.bat` faylini ikki marta bosish ham shu papkadan `python desktop.py` ni ishga tushiradi. `python` topilmasa, `py -3 desktop.py` sinanadi.
 
 Test:
 
@@ -39,9 +41,9 @@ Agar yopiq konturda Y_min da gorizontal kesma bo'lmasa, dastur taxmin qilmaydi: 
 
 Tolerans taxminan **0.05 mm** (dag'al, juda baland chizmada bbox balandligining kichik ulushi, lekin 0.25 mm dan oshmaydi). Ozgina qiyalagan yuz jimgina pastki deb olinmaydi. Devor yuzi chizmada **eng past** (min Y) gorizontal qirra bo'lishi kerak.
 
-Birlik: `$INSUNITS` millimetrga o'tkaziladi. Kod 0 (birliksiz) bo'lsa, millimetr deb qabul qilinadi va bu interfeysda yoziladi.
+Birlik: `$INSUNITS` millimetrga o'tkaziladi. Kod 0 (birliksiz) bo'lsa, millimetr deb qabul qilinadi va bu oynada yoziladi.
 
-Detal nomi — yuklangan fayl nomi, kengaytmasiz.
+Detal nomi — tanlangan fayl nomi, kengaytmasiz.
 
 ## Formula
 
@@ -71,4 +73,4 @@ Ochiq polyline 250 mm bo'lsa, P_faol = 250 mm, L_pastki = 0.
 
 ## Hisobot
 
-Excel (`.xlsx`) va PDF dastur ichidan yuklab olinadi. Ikkisida ham detal qatorlari, jami va formula bor.
+Oynadagi **Excel saqlash** va **PDF saqlash** tugmalari faylni kompyuterga yozadi. Ikkisida ham detal qatorlari, jami va formula bor.
