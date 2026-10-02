@@ -1,13 +1,23 @@
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.store.sync_guard import require_store_sync_token
 from app.crud.store import get_active_category, get_active_product, list_active_products, list_active_root_categories
 from app.db.session import get_db
 from app.models.store_enums import StoreProductType
+from app.models.store_settings import StorePriceSettings
 from app.schemas.store import StoreCategoryDetail, StoreCategoryList, StoreProductOut, StoreProductPage, StorePublicConfig
 from app.schemas.store_pricing import PricingCalculateRequest, PricingQuoteOut
+from app.schemas.store_sheets import SyncResultOut, SyncStatusOut
+from app.services.store_pricing.adjustment import format_percent
 from app.services.store_pricing.errors import PricingError
 from app.services.store_pricing.service import calculate_store_price
+from app.services.store_sheets.errors import SheetUnavailable, SheetValidationError, SyncBusy
+from app.services.store_sheets.google_source import GoogleSheetSource
+from app.services.store_sheets.repository import settings_are_stale
+from app.services.store_sheets.sync import sync_from_source
 
 router = APIRouter(tags=["Store (PenodecorPro)"])
 
@@ -63,6 +73,57 @@ async def calculate_price(body: PricingCalculateRequest, db: AsyncSession = Depe
         return await calculate_store_price(db, body)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail={"code": exc.code, "message": exc.message}) from exc
+
+
+def get_sheet_source() -> GoogleSheetSource:
+    return GoogleSheetSource()
+
+
+@router.get("/pricing/sync-status", response_model=SyncStatusOut, summary="Narx sinxron holati")
+async def pricing_sync_status(
+    _: None = Depends(require_store_sync_token),
+    db: AsyncSession = Depends(get_db),
+) -> SyncStatusOut:
+    row = await db.get(StorePriceSettings, 1)
+    if row is None:
+        return SyncStatusOut(
+            status="never",
+            stale=False,
+            currency="UZS",
+            global_price_adjustment_percent="0",
+            last_success_at=None,
+            last_attempt_at=None,
+            last_error=None,
+            sheet_updated_at=None,
+        )
+    percent = format_percent(Decimal(str(row.global_price_adjustment_percent)))
+    return SyncStatusOut(
+        status=row.status,
+        stale=settings_are_stale(row),
+        currency=row.currency,
+        global_price_adjustment_percent=percent,
+        last_success_at=row.last_success_at,
+        last_attempt_at=row.last_attempt_at,
+        last_error=row.last_error,
+        sheet_updated_at=row.sheet_updated_at,
+    )
+
+
+@router.post("/pricing/sync", response_model=SyncResultOut, summary="Narx jadvalini sinxronlash")
+async def pricing_sync(
+    _: None = Depends(require_store_sync_token),
+    source: GoogleSheetSource = Depends(get_sheet_source),
+    db: AsyncSession = Depends(get_db),
+) -> SyncResultOut:
+    try:
+        result = await sync_from_source(db, source)
+    except SyncBusy as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail={"code": exc.code, "message": exc.message}) from exc
+    except SheetValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail={"code": exc.code, "message": exc.message}) from exc
+    except SheetUnavailable as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail={"code": exc.code, "message": exc.message}) from exc
+    return SyncResultOut(status="ok", updated_products=int(result["updated_products"]))
 
 
 @router.get("/products/{slug}", response_model=StoreProductOut, summary="Mahsulot tafsiloti")

@@ -4,6 +4,7 @@ Qoidalar mahsulot turiga qarab tanlanadi. Frontend yuborgan narx ishlatilmaydi.
 Bir oilada bir nechta faol qoida bo‘lsa, hisoblash to‘xtaydi.
 """
 from collections.abc import Sequence
+from decimal import Decimal
 from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,7 @@ from app.schemas.store_pricing import (
     PricingComponentOut,
     PricingQuoteOut,
 )
+from app.services.store_pricing.adjustment import apply_selling_adjustment
 from app.services.store_pricing.cornice import quote_cornice
 from app.services.store_pricing.errors import PricingError, conflict, invalid, not_configured
 from app.services.store_pricing.money import CURRENCY, money_text
@@ -24,6 +26,7 @@ from app.services.store_pricing.quote import Quote
 from app.services.store_pricing.ready_made import quote_ready_made
 from app.services.store_pricing.round_column import quote_round_column
 from app.services.store_pricing.shohona import quote_shohona
+from app.services.store_sheets.repository import load_selling_adjustment
 from app.services.store_pricing.trim import quote_trim
 
 _FAMILY_BY_ROOT = {
@@ -45,13 +48,20 @@ _BLOCKS = ("trim", "pilaster", "round_column", "cornice", "shohona")
 
 
 async def calculate_store_price(db: AsyncSession, payload: PricingCalculateRequest) -> PricingQuoteOut:
+    percent, stale = await load_selling_adjustment(db)
     product = await get_product_for_pricing(db, payload.product_id)
     if product is None:
         raise PricingError("PRODUCT_NOT_FOUND", "Mahsulot topilmadi.", 404)
-    return calculate_quote(product, payload)
+    return calculate_quote(product, payload, adjustment_percent=percent, price_stale=stale)
 
 
-def calculate_quote(product: StoreProduct, payload: PricingCalculateRequest) -> PricingQuoteOut:
+def calculate_quote(
+    product: StoreProduct,
+    payload: PricingCalculateRequest,
+    *,
+    adjustment_percent: Decimal | None = None,
+    price_stale: bool = False,
+) -> PricingQuoteOut:
     if not product.is_active or not _category_is_open(product.category):
         raise PricingError("PRODUCT_INACTIVE", "Mahsulot hisoblash uchun ochiq emas.", 404)
     family = _family_of(product)
@@ -81,6 +91,8 @@ def calculate_quote(product: StoreProduct, payload: PricingCalculateRequest) -> 
             raise invalid("Mahsulot turiga mos o‘lchamlar yuborilmadi.")
         if rule.id is not None and "rule_id" not in quote.applied:
             quote.applied["rule_id"] = str(rule.id)
+    percent = Decimal("0") if adjustment_percent is None else adjustment_percent
+    quote = apply_selling_adjustment(quote, percent, price_stale=price_stale)
     return _to_out(quote)
 
 

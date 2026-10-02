@@ -42,6 +42,14 @@ class Settings(BaseSettings):
     # CORS
     CORS_ALLOW_ORIGINS: list[str] = ["*"]
 
+    # PenodecorPro narx jadvali. Qiymatlar bo‘sh bo‘lsa, hisoblash bazadagi
+    # asl narxdan davom etadi va Google Sheets chaqirilmaydi.
+    STORE_SHEETS_SPREADSHEET_ID: str = ""
+    STORE_SHEETS_CREDENTIALS_FILE: str = ""
+    STORE_SHEETS_SYNC_TOKEN: str = ""
+    STORE_SHEETS_SYNC_INTERVAL_SECONDS: int = 0
+    STORE_SHEETS_STALE_AFTER_SECONDS: int = 86_400
+
     @field_validator("DATABASE_URL")
     @classmethod
     def _normalize_database_url(cls, v: str) -> str:

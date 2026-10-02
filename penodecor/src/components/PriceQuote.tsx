@@ -1,5 +1,5 @@
 import { formatStoredPrice } from "../lib/storeApi";
-import { displayTotal } from "../lib/priceQuote";
+import { adjustmentCaption, baseSellingPrice, displayTotal } from "../lib/priceQuote";
 import type { PriceQuoteResult } from "../types/store";
 
 export function PriceQuote({
@@ -46,6 +46,9 @@ export function PriceQuote({
 
   if (!quote || total == null) return null;
 
+  const base = baseSellingPrice(quote, manualState);
+  const caption = adjustmentCaption(quote, manualState);
+
   return (
     <section className="rounded-3xl border border-line bg-canvas px-4 py-4" aria-live="polite">
       <h3 className="text-base font-semibold">Narx hisobi</h3>
@@ -62,6 +65,13 @@ export function PriceQuote({
           ))}
         </ul>
       ) : null}
+      {base ? (
+        <p className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3 text-sm">
+          <span className="text-muted">Asl narx</span>
+          <span className="font-semibold">{formatStoredPrice(base)}</span>
+        </p>
+      ) : null}
+      {caption ? <p className="mt-2 text-sm text-muted">Umumiy sozlama {caption}</p> : null}
       <p className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3 text-sm">
         <span className="text-muted">Jami</span>
         <span className="text-base font-semibold">{formatStoredPrice(total)}</span>

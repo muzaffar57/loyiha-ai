@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { displayTotal, isManualQuoteCategory } from "./priceQuote.ts";
+import { adjustmentCaption, baseSellingPrice, displayTotal, isManualQuoteCategory } from "./priceQuote.ts";
 import type { PriceQuoteResult } from "../types/store.ts";
 
 function quote(overrides: Partial<PriceQuoteResult> = {}): PriceQuoteResult {
@@ -33,4 +33,17 @@ test("qo‘lda narx va bo‘sh konfiguratsiya summa ko‘rsatmaydi", () => {
 
 test("server qaytargan summa o‘zgartirilmaydi", () => {
   assert.equal(displayTotal(quote()), "48000.00");
+});
+
+test("umumiy foiz asl narxdan alohida ko‘rsatiladi", () => {
+  const adjusted = quote({
+    subtotal: "500000.00",
+    total: "550000.00",
+    applied: { global_price_adjustment_percent: "10", base_total: "500000.00" },
+  });
+  assert.equal(displayTotal(adjusted), "550000.00");
+  assert.equal(baseSellingPrice(adjusted), "500000.00");
+  assert.equal(adjustmentCaption(adjusted), "+10%");
+  assert.equal(baseSellingPrice(quote()), null);
+  assert.equal(adjustmentCaption(quote({ status: "MANUAL_QUOTE_REQUIRED", total: null, requires_manual_quote: true })), null);
 });
