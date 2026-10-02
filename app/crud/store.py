@@ -161,6 +161,23 @@ async def list_active_products(
     return items, total
 
 
+async def get_product_for_pricing(db: AsyncSession, product_id: int) -> StoreProduct | None:
+    result = await db.execute(
+        select(StoreProduct)
+        .where(StoreProduct.id == product_id)
+        .options(
+            selectinload(StoreProduct.pricing_rules),
+            selectinload(StoreProduct.category).selectinload(StoreCategory.pricing_rules),
+            selectinload(StoreProduct.category).selectinload(StoreCategory.parent).selectinload(StoreCategory.pricing_rules),
+            selectinload(StoreProduct.category)
+            .selectinload(StoreCategory.parent)
+            .selectinload(StoreCategory.parent)
+            .selectinload(StoreCategory.pricing_rules),
+        )
+    )
+    return result.scalar_one_or_none()
+
+
 async def get_active_product(db: AsyncSession, slug: str) -> StoreProductOut | None:
     result = await db.execute(
         _public_product_query().where(StoreProduct.slug == slug).options(selectinload(StoreProduct.category))

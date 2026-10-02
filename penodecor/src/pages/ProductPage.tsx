@@ -2,6 +2,8 @@ import { Link, useParams } from "react-router-dom";
 import { CategoryArt } from "../components/CategoryArt";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
+import { PriceQuote } from "../components/PriceQuote";
+import { isManualQuoteCategory } from "../lib/priceQuote";
 import { formatStoredPrice, getProduct, mediaUrl, unitLabel } from "../lib/storeApi";
 import { useStoreResource } from "../lib/useStoreResource";
 
@@ -72,13 +74,20 @@ export function ProductPage() {
                 <dd className="font-semibold">{product.available_quantity}</dd>
               </div>
             ) : null}
-            <div className="flex justify-between gap-3 rounded-2xl bg-mist px-4 py-3">
-              <dt className="text-muted">Narx</dt>
-              <dd className="text-right font-semibold">
-                {product.product_type === "ready_made" && product.selling_price ? formatStoredPrice(product.selling_price) : "Administrator kiritadi"}
-              </dd>
-            </div>
+            {isManualQuoteCategory(product.category.slug) ? null : (
+              <div className="flex justify-between gap-3 rounded-2xl bg-mist px-4 py-3">
+                <dt className="text-muted">Narx</dt>
+                <dd className="text-right font-semibold">
+                  {product.product_type === "ready_made" && product.selling_price ? formatStoredPrice(product.selling_price) : "Administrator kiritadi"}
+                </dd>
+              </div>
+            )}
           </dl>
+          {isManualQuoteCategory(product.category.slug) ? (
+            <div className="mt-4">
+              <PriceQuote manual />
+            </div>
+          ) : null}
         </article>
       ) : null}
     </div>

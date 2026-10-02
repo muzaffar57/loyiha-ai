@@ -1,7 +1,7 @@
 """PenodecorPro katalogi.
 
-Yuk tashish jadvallariga bog‘lanmaydi. Narx qoidalari saqlanadi, lekin
-hisoblash mexanizmi keyingi bosqichda serverda yoziladi.
+Yuk tashish jadvallariga bog‘lanmaydi. Narx qoidalari shu modellarda saqlanadi
+va serverdagi pricing service orqali hisoblanadi.
 """
 from datetime import datetime
 from decimal import Decimal
@@ -119,7 +119,7 @@ class StoreProduct(Base):
 
 
 class StorePricingRule(Base):
-    """Administrator kiritadigan narx qoidasi. Hisoblash keyingi bosqichda."""
+    """Administrator kiritadigan narx qoidasi. Hisobni pricing service bajaradi."""
 
     __tablename__ = "store_pricing_rules"
     __table_args__ = (

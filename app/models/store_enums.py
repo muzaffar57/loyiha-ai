@@ -1,6 +1,6 @@
 """PenodecorPro do‘koni uchun qat’iy ro‘yxatlar.
 
-Yuk tashish enumlaridan alohida. Narx hisobi shu yerda emas.
+Yuk tashish enumlaridan alohida. Narx formulalari service qatlamida.
 """
 import enum
 

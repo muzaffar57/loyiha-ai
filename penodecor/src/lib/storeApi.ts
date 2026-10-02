@@ -1,11 +1,21 @@
-import type { StoreCategory, StoreCategoryDetail, StoreProduct, StoreProductPage } from "../types/store";
+import type {
+  PriceCalculateRequest,
+  PriceQuoteResult,
+  StoreCategory,
+  StoreCategoryDetail,
+  StoreProduct,
+  StoreProductPage,
+} from "../types/store";
 
 export class StoreApiError extends Error {
   status: number;
+  code: string | null;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code: string | null = null) {
     super(message);
+    this.name = "StoreApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -20,22 +30,35 @@ export function mediaUrl(path: string | null | undefined): string | null {
   return `${origin()}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-async function request<T>(path: string): Promise<T> {
+function errorFromBody(body: unknown): { message: string; code: string | null } {
+  const fallback = "So‘rov bajarilmadi.";
+  if (!body || typeof body !== "object") return { message: fallback, code: null };
+  const detail = (body as { detail?: unknown }).detail;
+  if (typeof detail === "string" && detail.trim()) return { message: detail, code: null };
+  if (detail && typeof detail === "object") {
+    const record = detail as { message?: unknown; code?: unknown };
+    const message = typeof record.message === "string" && record.message.trim() ? record.message : fallback;
+    const code = typeof record.code === "string" ? record.code : null;
+    return { message, code };
+  }
+  return { message: fallback, code: null };
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${origin()}${path}`);
+    response = await fetch(`${origin()}${path}`, init);
   } catch {
     throw new StoreApiError("Do‘kon serveriga ulanib bo‘lmadi.", 0);
   }
   if (!response.ok) {
-    let detail = "So‘rov bajarilmadi.";
+    let parsed = { message: "So‘rov bajarilmadi.", code: null as string | null };
     try {
-      const body = (await response.json()) as { detail?: unknown };
-      if (typeof body.detail === "string") detail = body.detail;
+      parsed = errorFromBody(await response.json());
     } catch {
-      detail = "So‘rov bajarilmadi.";
+      parsed = { message: "So‘rov bajarilmadi.", code: null };
     }
-    throw new StoreApiError(detail, response.status);
+    throw new StoreApiError(parsed.message, response.status, parsed.code);
   }
   return (await response.json()) as T;
 }
@@ -69,6 +92,14 @@ export function listProducts(options: {
 
 export function getProduct(slug: string): Promise<StoreProduct> {
   return request(`/api/store/products/${encodeURIComponent(slug)}`);
+}
+
+export function calculatePrice(body: PriceCalculateRequest): Promise<PriceQuoteResult> {
+  return request("/api/store/pricing/calculate", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
 
 export function listStock(options: { category?: string; q?: string; page?: number; pageSize?: number }): Promise<StoreProductPage> {

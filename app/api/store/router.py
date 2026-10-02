@@ -5,6 +5,9 @@ from app.crud.store import get_active_category, get_active_product, list_active_
 from app.db.session import get_db
 from app.models.store_enums import StoreProductType
 from app.schemas.store import StoreCategoryDetail, StoreCategoryList, StoreProductOut, StoreProductPage, StorePublicConfig
+from app.schemas.store_pricing import PricingCalculateRequest, PricingQuoteOut
+from app.services.store_pricing.errors import PricingError
+from app.services.store_pricing.service import calculate_store_price
 
 router = APIRouter(tags=["Store (PenodecorPro)"])
 
@@ -52,6 +55,14 @@ async def list_products(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kategoriya topilmadi.")
     items, total = found
     return StoreProductPage(items=items, page=page, page_size=page_size, total=total)
+
+
+@router.post("/pricing/calculate", response_model=PricingQuoteOut, summary="Mahsulot narxini serverda hisoblash")
+async def calculate_price(body: PricingCalculateRequest, db: AsyncSession = Depends(get_db)) -> PricingQuoteOut:
+    try:
+        return await calculate_store_price(db, body)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail={"code": exc.code, "message": exc.message}) from exc
 
 
 @router.get("/products/{slug}", response_model=StoreProductOut, summary="Mahsulot tafsiloti")
