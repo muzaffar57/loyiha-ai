@@ -42,16 +42,18 @@ export function HomePage() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:mt-8 lg:grid-cols-[1.4fr_0.8fr] lg:items-start">
-        <section className="relative min-h-[300px] overflow-hidden rounded-3xl bg-brand text-white shadow-[var(--shadow-card)]">
-          <div className="absolute inset-y-0 right-0 w-[58%] sm:w-1/2">
-            <FacadeArt />
-          </div>
-          <div className="relative z-10 flex min-h-[300px] max-w-[15rem] flex-col justify-end gap-3 p-5 sm:max-w-xs sm:p-7">
-            <h1 className="text-[1.65rem] leading-tight font-semibold">Fasad uchun sifatli dekorativ bezaklar</h1>
-            <p className="text-sm leading-6 text-white/80">Uyingizga nafislik va mustahkamlik qo‘shing.</p>
-            <Button to="/katalog" variant="onDark" className="self-start">
-              Katalogni ko‘rish
-            </Button>
+        <section className="overflow-hidden rounded-3xl bg-brand text-white shadow-[var(--shadow-card)]">
+          <div className="grid sm:min-h-[300px] sm:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+            <div className="order-1 h-40 sm:order-2 sm:h-auto">
+              <FacadeArt />
+            </div>
+            <div className="order-2 flex flex-col justify-end gap-3 p-5 sm:order-1 sm:p-7">
+              <h1 className="text-[1.65rem] leading-tight font-semibold text-balance">Fasad uchun sifatli dekorativ bezaklar</h1>
+              <p className="text-sm leading-6 text-white/80">Uyingizga nafislik va mustahkamlik qo‘shing.</p>
+              <Button to="/katalog" variant="onDark" className="max-w-full self-start">
+                Katalogni ko‘rish
+              </Button>
+            </div>
           </div>
         </section>
 
