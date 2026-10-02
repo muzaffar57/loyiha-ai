@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.api.store.router import router as store_router
 from app.api.v1.router import api_router
 from app.core.config import settings
 
@@ -32,6 +33,7 @@ app.add_middleware(
 app.mount("/media", StaticFiles(directory=settings.MEDIA_ROOT), name="media")
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+app.include_router(store_router, prefix="/api/store")
 
 
 @app.get("/health", tags=["Health"], summary="Server ishlab turganini tekshirish")

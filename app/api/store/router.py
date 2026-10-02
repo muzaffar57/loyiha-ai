@@ -1,0 +1,91 @@
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.crud.store import get_active_category, get_active_product, list_active_products, list_active_root_categories
+from app.db.session import get_db
+from app.models.store_enums import StoreProductType
+from app.schemas.store import StoreCategoryDetail, StoreCategoryList, StoreProductOut, StoreProductPage, StorePublicConfig
+
+router = APIRouter(tags=["Store (PenodecorPro)"])
+
+_SLUG = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
+
+
+@router.get("/config", response_model=StorePublicConfig, summary="Ochiq do‘kon sozlamasi")
+async def store_config() -> StorePublicConfig:
+    return StorePublicConfig(currency="UZS", company_phone=None, checkout_enabled=False)
+
+
+@router.get("/categories", response_model=StoreCategoryList, summary="Faol katalog bo‘limlari")
+async def list_categories(db: AsyncSession = Depends(get_db)) -> StoreCategoryList:
+    return StoreCategoryList(items=await list_active_root_categories(db))
+
+
+@router.get("/categories/{slug}", response_model=StoreCategoryDetail, summary="Bo‘lim tafsiloti")
+async def category_detail(slug: str, db: AsyncSession = Depends(get_db)) -> StoreCategoryDetail:
+    category = await get_active_category(db, slug)
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kategoriya topilmadi.")
+    return category
+
+
+@router.get("/products", response_model=StoreProductPage, summary="Faol mahsulotlar")
+async def list_products(
+    category: str | None = Query(default=None, max_length=80, pattern=_SLUG),
+    product_type: StoreProductType | None = None,
+    featured: bool | None = None,
+    q: str | None = Query(default=None, max_length=80),
+    page: int = Query(default=1, ge=1, le=10_000),
+    page_size: int = Query(default=20, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+) -> StoreProductPage:
+    found = await list_active_products(
+        db,
+        page=page,
+        page_size=page_size,
+        category_slug=category,
+        product_type=product_type,
+        featured=featured,
+        query=_clean_query(q),
+    )
+    if found is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kategoriya topilmadi.")
+    items, total = found
+    return StoreProductPage(items=items, page=page, page_size=page_size, total=total)
+
+
+@router.get("/products/{slug}", response_model=StoreProductOut, summary="Mahsulot tafsiloti")
+async def product_detail(slug: str, db: AsyncSession = Depends(get_db)) -> StoreProductOut:
+    product = await get_active_product(db, slug)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Mahsulot topilmadi.")
+    return product
+
+
+@router.get("/stock", response_model=StoreProductPage, summary="Tayyor ombor mahsulotlari")
+async def list_stock(
+    category: str | None = Query(default=None, max_length=80, pattern=_SLUG),
+    q: str | None = Query(default=None, max_length=80),
+    page: int = Query(default=1, ge=1, le=10_000),
+    page_size: int = Query(default=20, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+) -> StoreProductPage:
+    found = await list_active_products(
+        db,
+        page=page,
+        page_size=page_size,
+        category_slug=category,
+        product_type=StoreProductType.READY_MADE,
+        query=_clean_query(q),
+    )
+    if found is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kategoriya topilmadi.")
+    items, total = found
+    return StoreProductPage(items=items, page=page, page_size=page_size, total=total)
+
+
+def _clean_query(value: str | None) -> str | None:
+    if value is None:
+        return None
+    trimmed = value.strip()
+    return trimmed or None

@@ -21,7 +21,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/katalog" element={<CatalogPage />} />
         <Route path="/katalog/:slug" element={<CategoryRoute />} />
-        <Route path="/mahsulot/:id" element={<ProductPage />} />
+        <Route path="/mahsulot/:slug" element={<ProductPage />} />
         <Route path="/savat" element={<CartPage />} />
         <Route path="/buyurtmalar" element={<OrdersPage />} />
         <Route path="/profil" element={<ProfilePage />} />

@@ -1,5 +1,25 @@
+function artKey(slug: string): string {
+  if (slug === "tayyor-mahsulotlar" || slug.startsWith("tayyor")) return "tayyor-mahsulotlar";
+  if (slug.startsWith("pilastr")) return "pilastrlar";
+  if (slug.startsWith("yumaloq")) return "yumaloq-ustunlar";
+  if (slug.startsWith("shift") || slug === "belbog") return "shift-karnizlari";
+  if (slug.startsWith("shohona")) return "shohona-karnizlar";
+  return "rom-va-eshik";
+}
+
 export function CategoryArt({ slug }: { slug: string }) {
-  if (slug === "pilastrlar") {
+  const key = artKey(slug);
+  if (key === "tayyor-mahsulotlar") {
+    return (
+      <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
+        <rect width="80" height="80" fill="#F5F6F4" />
+        <rect x="18" y="44" width="44" height="16" rx="2" fill="#173D32" />
+        <rect x="22" y="26" width="36" height="14" rx="2" fill="#2C5C4C" />
+        <rect x="28" y="14" width="24" height="10" rx="2" fill="#173D32" />
+      </svg>
+    );
+  }
+  if (key === "pilastrlar") {
     return (
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />
@@ -9,7 +29,7 @@ export function CategoryArt({ slug }: { slug: string }) {
       </svg>
     );
   }
-  if (slug === "yumaloq-ustunlar") {
+  if (key === "yumaloq-ustunlar") {
     return (
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />
@@ -20,7 +40,7 @@ export function CategoryArt({ slug }: { slug: string }) {
       </svg>
     );
   }
-  if (slug === "shift-karnizlari") {
+  if (key === "shift-karnizlari") {
     return (
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />
@@ -30,7 +50,7 @@ export function CategoryArt({ slug }: { slug: string }) {
       </svg>
     );
   }
-  if (slug === "shohona-karnizlar") {
+  if (key === "shohona-karnizlar") {
     return (
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />

@@ -22,4 +22,4 @@ Sayt `http://localhost:5852` da ochiladi.
 - Mehmon profili, yetkazish, savol-javob, maxfiylik va shartlar
 - O‘rnatish uchun web manifest
 
-Mahsulot narxi, buyurtma yuborish va administrator paneli keyingi bosqich. Haqiqiy narx va telefon raqami kodga yozilmagan.
+Katalog `/api/store/` dan o‘qiladi. Mahsulot va narx administrator kiritmaguncha ro‘yxat bo‘sh. Buyurtma yuborish keyingi bosqich.

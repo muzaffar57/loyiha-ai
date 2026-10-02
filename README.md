@@ -273,5 +273,5 @@ shundan keyin foydalanuvchilar botni ochganda to'g'ridan-to'g'ri ilova ochiladi.
 ## PenodecorPro do‘koni — `penodecor/`
 
 Fasad bezaklari uchun alohida mijoz sayti (Vite + React + Tailwind). Yuk tashish
-API va Telegram Mini App bilan aralashmaydi. Ishga tushirish: `penodecor/README.md`.
-Port: `http://localhost:5852`.
+API va Telegram Mini App bilan aralashmaydi. Do‘kon API: `/api/store/`.
+Ishga tushirish: `penodecor/README.md`. Port: `http://localhost:5852`.

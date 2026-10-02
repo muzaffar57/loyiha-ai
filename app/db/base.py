@@ -9,5 +9,15 @@ from app.models.user import User  # noqa: F401
 from app.models.cargo import Cargo  # noqa: F401
 from app.models.cargo_photo import CargoPhoto  # noqa: F401
 from app.models.driver_offer import DriverOffer  # noqa: F401
+from app.models.store import StoreCategory, StorePricingRule, StoreProduct  # noqa: F401
 
-__all__ = ["Base", "User", "Cargo", "CargoPhoto", "DriverOffer"]
+__all__ = [
+    "Base",
+    "User",
+    "Cargo",
+    "CargoPhoto",
+    "DriverOffer",
+    "StoreCategory",
+    "StoreProduct",
+    "StorePricingRule",
+]
