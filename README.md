@@ -269,3 +269,9 @@ e'lonlar uchun ishlaydi. Haydovchi e'lonlari uchun xuddi shu qoida:
 Ilova tayyor bo'lgandan keyin, [@BotFather](https://t.me/BotFather) orqali
 botingizga Menu Button (`/setmenubutton`) qo'shib, WebApp URL'ini kiriting —
 shundan keyin foydalanuvchilar botni ochganda to'g'ridan-to'g'ri ilova ochiladi.
+
+## PenodecorPro do‘koni — `penodecor/`
+
+Fasad bezaklari uchun alohida mijoz sayti (Vite + React + Tailwind). Yuk tashish
+API va Telegram Mini App bilan aralashmaydi. Ishga tushirish: `penodecor/README.md`.
+Port: `http://localhost:5852`.

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PenodecorPro">
+  <rect width="64" height="64" rx="14" fill="#173D32"/>
+  <path fill="#F5F6F4" d="M12 46V28l20-12 20 12v18H12zm8-4h8v-8h-8v8zm16 0h8v-8h-8v8z"/>
+  <path fill="#173D32" d="M28 18h8l10 6H18l10-6z"/>
+</svg>
