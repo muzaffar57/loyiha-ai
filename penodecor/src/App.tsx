@@ -1,4 +1,12 @@
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { RequireAdmin } from "./admin/AdminApp";
+import { CategoriesPage } from "./admin/CategoriesPage";
+import { DashboardPage } from "./admin/DashboardPage";
+import { LoginPage } from "./admin/LoginPage";
+import { ProductsPage } from "./admin/ProductsPage";
+import { StockPage } from "./admin/StockPage";
+import { SyncPage } from "./admin/SyncPage";
+import { UnpricedPage } from "./admin/UnpricedPage";
 import { AppShell } from "./components/AppShell";
 import { CartPage } from "./pages/CartPage";
 import { CatalogPage } from "./pages/CatalogPage";
@@ -16,8 +24,17 @@ function CategoryRoute() {
 
 export default function App() {
   return (
-    <AppShell>
-      <Routes>
+    <Routes>
+      <Route path="/admin/login" element={<LoginPage />} />
+      <Route path="/admin" element={<RequireAdmin />}>
+        <Route index element={<DashboardPage />} />
+        <Route path="kategoriyalar" element={<CategoriesPage />} />
+        <Route path="mahsulotlar" element={<ProductsPage />} />
+        <Route path="ombor" element={<StockPage />} />
+        <Route path="narxsiz" element={<UnpricedPage />} />
+        <Route path="sinxron" element={<SyncPage />} />
+      </Route>
+      <Route element={<AppShell />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/katalog" element={<CatalogPage />} />
         <Route path="/katalog/:slug" element={<CategoryRoute />} />
@@ -31,7 +48,7 @@ export default function App() {
         <Route path="/maxfiylik" element={<PrivacyPage />} />
         <Route path="/shartlar" element={<TermsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AppShell>
+      </Route>
+    </Routes>
   );
 }

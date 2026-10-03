@@ -88,7 +88,11 @@ Narx ustuni yo‘q. Sinxron va foiz individual narx yaratmaydi.
 `product_slug`, `sku`, `selling_price`, `available_quantity`, `is_active`
 
 `selling_price` asl sotuv narxi. Foizdan keyingi summa shu katakka yozilmaydi.
-Qoldiq `0` bo‘lishi mumkin. Narx `0` bo‘lmaydi.
+Sinxron tayyor mahsulotda faqat shu narxni yangilaydi. `available_quantity` va
+mahsulotning `is_active` qiymati jadvaldan yozilmaydi. Narx qoidasining
+`is_active` qiymati alohida va o‘z varag‘idagi konfiguratsiyaga mos yangilanadi.
+Ustunlar baribir tekshiriladi: qoldiq `0` bo‘lishi mumkin, narx `0` bo‘lmaydi.
+SKU do‘kondagi SKU bilan mos kelmasa butun sinxron to‘xtaydi.
 
 Mahsulot identifikatori do‘kondagi `slug` bilan bir xil bo‘lishi kerak. Noma’lum
 slug, takroriy qoida yoki yaroqsiz qator butun sinxronni to‘xtatadi. Oxirgi

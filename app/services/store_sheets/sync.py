@@ -145,9 +145,8 @@ async def _apply(db: AsyncSession, draft: WorkbookDraft) -> int:
             )
         )
     for product, stock in resolved_stock:
+        # Qoldiq va mahsulot faolligi do‘kon ma’lumoti. Jadval faqat asl sotuv narxini yangilaydi.
         product.selling_price = Decimal(stock.selling_price)
-        product.available_quantity = stock.available_quantity
-        product.is_active = stock.is_active
     row = await get_or_create_settings(db)
     now = datetime.now(timezone.utc)
     row.global_price_adjustment_percent = draft.percent

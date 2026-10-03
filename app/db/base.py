@@ -11,6 +11,8 @@ from app.models.cargo_photo import CargoPhoto  # noqa: F401
 from app.models.driver_offer import DriverOffer  # noqa: F401
 from app.models.store import StoreCategory, StorePricingRule, StoreProduct  # noqa: F401
 from app.models.store_settings import StorePriceSettings  # noqa: F401
+from app.models.store_admin import StoreAdmin  # noqa: F401
+from app.models.store_admin_throttle import StoreAdminLoginThrottle  # noqa: F401
 
 __all__ = [
     "Base",
@@ -22,4 +24,6 @@ __all__ = [
     "StoreProduct",
     "StorePricingRule",
     "StorePriceSettings",
+    "StoreAdmin",
+    "StoreAdminLoginThrottle",
 ]

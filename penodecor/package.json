@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --experimental-strip-types --test src/lib/cartStorage.test.ts src/lib/priceQuote.test.ts",
+    "test": "node --experimental-strip-types --test src/lib/cartStorage.test.ts src/lib/priceQuote.test.ts src/lib/adminPanel.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

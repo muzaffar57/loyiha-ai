@@ -3,9 +3,13 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.store.admin_catalog import router as store_admin_catalog_router
+from app.api.store.admin_deps import get_current_store_admin
+from app.api.store.admin_routes import router as store_admin_router
 from app.api.store.sync_guard import require_store_sync_token
 from app.crud.store import get_active_category, get_active_product, list_active_products, list_active_root_categories
 from app.db.session import get_db
+from app.models.store_admin import StoreAdmin
 from app.models.store_enums import StoreProductType
 from app.models.store_settings import StorePriceSettings
 from app.schemas.store import StoreCategoryDetail, StoreCategoryList, StoreProductOut, StoreProductPage, StorePublicConfig
@@ -20,6 +24,8 @@ from app.services.store_sheets.repository import settings_are_stale
 from app.services.store_sheets.sync import sync_from_source
 
 router = APIRouter(tags=["Store (PenodecorPro)"])
+router.include_router(store_admin_router)
+router.include_router(store_admin_catalog_router)
 
 _SLUG = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
 
@@ -79,11 +85,7 @@ def get_sheet_source() -> GoogleSheetSource:
     return GoogleSheetSource()
 
 
-@router.get("/pricing/sync-status", response_model=SyncStatusOut, summary="Narx sinxron holati")
-async def pricing_sync_status(
-    _: None = Depends(require_store_sync_token),
-    db: AsyncSession = Depends(get_db),
-) -> SyncStatusOut:
+async def load_sync_status(db: AsyncSession) -> SyncStatusOut:
     row = await db.get(StorePriceSettings, 1)
     if row is None:
         return SyncStatusOut(
@@ -109,12 +111,7 @@ async def pricing_sync_status(
     )
 
 
-@router.post("/pricing/sync", response_model=SyncResultOut, summary="Narx jadvalini sinxronlash")
-async def pricing_sync(
-    _: None = Depends(require_store_sync_token),
-    source: GoogleSheetSource = Depends(get_sheet_source),
-    db: AsyncSession = Depends(get_db),
-) -> SyncResultOut:
+async def run_pricing_sync(db: AsyncSession, source: GoogleSheetSource) -> SyncResultOut:
     try:
         result = await sync_from_source(db, source)
     except SyncBusy as exc:
@@ -124,6 +121,40 @@ async def pricing_sync(
     except SheetUnavailable as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail={"code": exc.code, "message": exc.message}) from exc
     return SyncResultOut(status="ok", updated_products=int(result["updated_products"]))
+
+
+@router.get("/pricing/sync-status", response_model=SyncStatusOut, summary="Narx sinxron holati")
+async def pricing_sync_status(
+    _: None = Depends(require_store_sync_token),
+    db: AsyncSession = Depends(get_db),
+) -> SyncStatusOut:
+    return await load_sync_status(db)
+
+
+@router.post("/pricing/sync", response_model=SyncResultOut, summary="Narx jadvalini sinxronlash")
+async def pricing_sync(
+    _: None = Depends(require_store_sync_token),
+    source: GoogleSheetSource = Depends(get_sheet_source),
+    db: AsyncSession = Depends(get_db),
+) -> SyncResultOut:
+    return await run_pricing_sync(db, source)
+
+
+@router.get("/admin/pricing/sync-status", response_model=SyncStatusOut, summary="Administrator uchun sinxron holati")
+async def admin_pricing_sync_status(
+    _admin: StoreAdmin = Depends(get_current_store_admin),
+    db: AsyncSession = Depends(get_db),
+) -> SyncStatusOut:
+    return await load_sync_status(db)
+
+
+@router.post("/admin/pricing/sync", response_model=SyncResultOut, summary="Administrator sinxronni boshlashi")
+async def admin_pricing_sync(
+    _admin: StoreAdmin = Depends(get_current_store_admin),
+    source: GoogleSheetSource = Depends(get_sheet_source),
+    db: AsyncSession = Depends(get_db),
+) -> SyncResultOut:
+    return await run_pricing_sync(db, source)
 
 
 @router.get("/products/{slug}", response_model=StoreProductOut, summary="Mahsulot tafsiloti")

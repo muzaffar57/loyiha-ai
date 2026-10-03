@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     STORE_SHEETS_SYNC_INTERVAL_SECONDS: int = 0
     STORE_SHEETS_STALE_AFTER_SECONDS: int = 86_400
 
+    # PenodecorPro do‘kon administratori. Yuk tashish SECRET_KEY dan alohida.
+    STORE_ADMIN_JWT_SECRET: str = ""
+    # Vergul bilan ajratilgan ishonchli reverse proxy manzillari.
+    # Bo‘sh bo‘lsa X-Forwarded-For e’tiborsiz qoldiriladi.
+    STORE_ADMIN_TRUSTED_PROXIES: str = ""
+
     @field_validator("DATABASE_URL")
     @classmethod
     def _normalize_database_url(cls, v: str) -> str:

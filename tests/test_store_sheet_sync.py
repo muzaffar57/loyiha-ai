@@ -458,6 +458,52 @@ def test_valid_sheet_updates_base_prices_and_bad_sheet_keeps_them(sheet_client, 
     _assert_base_prices(factory, ready="500000.00", stock="1500.50", percent=Decimal("0"))
 
 
+def test_ready_sync_updates_price_without_stock_or_product_active(sheet_client, monkeypatch: pytest.MonkeyPatch):
+    client, factory = sheet_client
+    monkeypatch.setattr(settings, "STORE_SHEETS_SYNC_TOKEN", TOKEN)
+    asyncio.run(_seed(factory))
+    source = MemorySheetSource(_workbook(percent="10"))
+    app.dependency_overrides[get_sheet_source] = lambda: source
+
+    synced = client.post("/api/store/pricing/sync", headers=_auth())
+    assert synced.status_code == 200
+    asyncio.run(_set_ready_flags(factory, "tayyor-1", active=False, quantity=7))
+
+    tables = _workbook(percent="10")
+    tables[READY_SHEET][1] = ["tayyor-1", "STK-1", "750000", "1", "true"]
+    rom_active = tables[ROM_SHEET][0].index("is_active")
+    tables[ROM_SHEET][1][rom_active] = "false"
+    source.tables = tables
+    updated = client.post("/api/store/pricing/sync", headers=_auth())
+    assert updated.status_code == 200
+    state = asyncio.run(_ready_boundary(factory))
+    assert state["price"] == Decimal("750000.00")
+    assert state["quantity"] == 7
+    assert state["product_active"] is False
+    assert state["rule_active"] is False
+    assert state["rom_product_active"] is True
+    assert state["percent"] == Decimal("10")
+    assert state["status"] == "ok"
+    assert state["last_success_at"] is not None
+
+    mismatch = _workbook(percent="25")
+    mismatch[READY_SHEET][1] = ["tayyor-1", "STK-OTHER", "1", "0", "false"]
+    source.tables = mismatch
+    rejected = client.post("/api/store/pricing/sync", headers=_auth())
+    assert rejected.status_code == 409
+    assert rejected.json()["detail"]["code"] == "SHEET_VALIDATION_FAILED"
+    assert "SKU mos emas" in rejected.json()["detail"]["message"]
+    kept = asyncio.run(_ready_boundary(factory))
+    assert kept["price"] == Decimal("750000.00")
+    assert kept["quantity"] == 7
+    assert kept["product_active"] is False
+    assert kept["rule_active"] is False
+    assert kept["rom_product_active"] is True
+    assert kept["percent"] == Decimal("10")
+    assert kept["last_success_at"] == state["last_success_at"]
+    assert kept["status"] == "error"
+
+
 @pytest.fixture()
 def sheet_client(tmp_path: Path):
     database = tmp_path / "sheets.sqlite"
@@ -595,10 +641,13 @@ def _assert_base_prices(factory, *, ready: str, stock: str, percent: Decimal) ->
             rom_rule = await session.scalar(select(StorePricingRule).where(StorePricingRule.product_id == rom.id))
             settings_row = await session.get(StorePriceSettings, 1)
             assert Decimal(str(first.selling_price)) == Decimal(ready)
-            assert first.available_quantity == 3
+            assert first.available_quantity == 1
+            assert first.is_active is True
             assert first.description == "tannarx 1000"
             assert first.name == "Tayyor"
             assert Decimal(str(second.selling_price)) == Decimal(stock)
+            assert second.available_quantity == 9
+            assert second.is_active is True
             assert second.description == "tannarx 2000"
             assert rule.config["manufacturing_cost"] == "1000"
             assert rule.config["cost_price"] == "2000"
@@ -608,6 +657,34 @@ def _assert_base_prices(factory, *, ready: str, stock: str, percent: Decimal) ->
             assert Decimal(str(settings_row.global_price_adjustment_percent)) == percent
 
     asyncio.run(read())
+
+
+async def _set_ready_flags(factory, slug: str, *, active: bool, quantity: int) -> None:
+    async with factory() as session:
+        product = await session.scalar(select(StoreProduct).where(StoreProduct.slug == slug))
+        assert product is not None
+        product.is_active = active
+        product.available_quantity = quantity
+        await session.commit()
+
+
+async def _ready_boundary(factory) -> dict:
+    async with factory() as session:
+        ready = await session.scalar(select(StoreProduct).where(StoreProduct.slug == "tayyor-1"))
+        rom = await session.scalar(select(StoreProduct).where(StoreProduct.slug == "rom-1"))
+        rom_rule = await session.scalar(select(StorePricingRule).where(StorePricingRule.product_id == rom.id))
+        settings_row = await session.get(StorePriceSettings, 1)
+        assert ready is not None and rom is not None and rom_rule is not None and settings_row is not None
+        return {
+            "price": Decimal(str(ready.selling_price)),
+            "quantity": ready.available_quantity,
+            "product_active": ready.is_active,
+            "rule_active": rom_rule.is_active,
+            "rom_product_active": rom.is_active,
+            "percent": Decimal(str(settings_row.global_price_adjustment_percent)),
+            "status": settings_row.status,
+            "last_success_at": settings_row.last_success_at,
+        }
 
 
 async def _product_id(factory, slug: str) -> int:
@@ -689,7 +766,7 @@ def _assert_quotes(client: TestClient, factory, *, percent: str) -> None:
     stock = client.post("/api/store/pricing/calculate", json={"product_id": ids["tayyor-2"], "quantity": 2})
     assert stock.json()["subtotal"] == "3001.00"
     assert stock.json()["total"] == "3301.10"
-    too_many = client.post("/api/store/pricing/calculate", json={"product_id": ids["tayyor-2"], "quantity": 4})
+    too_many = client.post("/api/store/pricing/calculate", json={"product_id": ids["tayyor-2"], "quantity": 10})
     assert too_many.status_code == 409
     assert too_many.json()["detail"]["code"] == "INSUFFICIENT_STOCK"
 
