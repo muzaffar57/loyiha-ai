@@ -225,7 +225,7 @@ function ProductImages({
           const src = mediaUrl(image);
           return (
             <figure key={image} className="min-w-0">
-              {src ? <img src={src} alt="" className="h-28 w-full rounded-2xl object-cover" /> : null}
+              {src ? <img src={src} alt="" className="h-28 w-full rounded-2xl bg-mist object-contain" /> : null}
               <AdminButton
                 tone="danger"
                 onClick={() => {

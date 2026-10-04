@@ -31,9 +31,9 @@ export function ProductPage() {
       ) : null}
       {product ? (
         <article className="mt-4">
-          <div className="overflow-hidden rounded-3xl border border-line">
+          <div className="overflow-hidden rounded-3xl border border-line bg-mist">
             {product.images.length > 0 ? (
-              <img src={mediaUrl(product.images[0]) ?? ""} alt="" className="aspect-[4/3] w-full object-cover" />
+              <img src={mediaUrl(product.images[0]) ?? ""} alt={product.name} className="mx-auto max-h-[70vh] w-full object-contain" />
             ) : (
               <div className="h-48">
                 <CategoryArt slug={product.category.slug} />

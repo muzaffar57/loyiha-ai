@@ -9,7 +9,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
     <Link to={`/mahsulot/${product.slug}`} className="block overflow-hidden rounded-2xl border border-line bg-canvas">
       <div className="aspect-[4/3] overflow-hidden bg-mist">
         {image ? (
-          <img src={image} alt="" className="h-full w-full object-cover" />
+          <img src={image} alt="" className="h-full w-full object-contain" />
         ) : (
           <CategoryArt slug={product.category.slug} />
         )}
