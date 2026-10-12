@@ -14,7 +14,7 @@ export function CategoryArt({ slug }: { slug: string }) {
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />
         <rect x="18" y="44" width="44" height="16" rx="2" fill="#1B3358" />
-        <rect x="22" y="26" width="36" height="14" rx="2" fill="#2C5C4C" />
+        <rect x="22" y="26" width="36" height="14" rx="2" fill="#E06828" />
         <rect x="28" y="14" width="24" height="10" rx="2" fill="#1B3358" />
       </svg>
     );
@@ -34,7 +34,7 @@ export function CategoryArt({ slug }: { slug: string }) {
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />
         <ellipse cx="40" cy="18" rx="14" ry="5" fill="#1B3358" />
-        <path d="M26 18h28v44H26z" fill="#2C5C4C" />
+        <path d="M26 18h28v44H26z" fill="#E06828" />
         <ellipse cx="40" cy="62" rx="14" ry="5" fill="#1B3358" />
         <path d="M40 18v44" stroke="#F5F6F4" strokeWidth="1" opacity="0.4" />
       </svg>
@@ -45,7 +45,7 @@ export function CategoryArt({ slug }: { slug: string }) {
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />
         <path d="M10 28h60v6H10z" fill="#1B3358" />
-        <path d="M14 34h52c0 8-6 10-10 10H24c-4 0-10-2-10-10z" fill="#2C5C4C" />
+        <path d="M14 34h52c0 8-6 10-10 10H24c-4 0-10-2-10-10z" fill="#E06828" />
         <path d="M18 44c4 6 8 8 22 8s18-2 22-8" fill="none" stroke="#1B3358" strokeWidth="2" />
       </svg>
     );
@@ -55,7 +55,7 @@ export function CategoryArt({ slug }: { slug: string }) {
       <svg viewBox="0 0 80 80" className="h-full w-full" aria-hidden="true">
         <rect width="80" height="80" fill="#F5F6F4" />
         <path d="M8 24h64v8H8z" fill="#1B3358" />
-        <path d="M12 32c4 14 10 18 28 18s24-4 28-18H12z" fill="#2C5C4C" />
+        <path d="M12 32c4 14 10 18 28 18s24-4 28-18H12z" fill="#E06828" />
         <circle cx="22" cy="40" r="2" fill="#F5F6F4" />
         <circle cx="40" cy="42" r="2" fill="#F5F6F4" />
         <circle cx="58" cy="40" r="2" fill="#F5F6F4" />
@@ -75,17 +75,18 @@ export function CategoryArt({ slug }: { slug: string }) {
 export function FacadeArt() {
   return (
     <svg viewBox="0 0 280 320" className="h-full w-full" aria-hidden="true">
-      <rect width="280" height="320" fill="#1d4a3d" />
-      <path d="M70 86h140l-8 18H78L70 86z" fill="#f4f1ea" />
-      <rect x="86" y="104" width="108" height="150" fill="#f7f5f0" />
+      <rect width="280" height="320" fill="#E7EEF6" />
+      <rect width="10" height="320" fill="#E06828" />
+      <path d="M70 86h140l-8 18H78L70 86z" fill="#1B3358" />
+      <rect x="86" y="104" width="108" height="150" fill="#F7F5F0" />
       <rect x="104" y="124" width="28" height="46" fill="#1B3358" />
       <rect x="148" y="124" width="28" height="46" fill="#1B3358" />
-      <path d="M100 124h36l-4 8h-28l-4-8zm44 0h36l-4 8h-28l-4-8z" fill="#f4f1ea" />
+      <path d="M100 124h36l-4 8h-28l-4-8zm44 0h36l-4 8h-28l-4-8z" fill="#E06828" />
       <rect x="126" y="186" width="28" height="68" fill="#1B3358" />
-      <path d="M64 254h152v10H64z" fill="#f4f1ea" />
-      <rect x="58" y="264" width="18" height="40" fill="#efeae2" />
-      <rect x="204" y="264" width="18" height="40" fill="#efeae2" />
-      <path d="M52 258h30l-3 8H55l-3-8zm146 0h30l-3 8h-24l-3-8z" fill="#f7f5f0" />
+      <path d="M64 254h152v10H64z" fill="#1B3358" />
+      <rect x="58" y="264" width="18" height="40" fill="#F7F5F0" />
+      <rect x="204" y="264" width="18" height="40" fill="#F7F5F0" />
+      <path d="M52 258h30l-3 8H55l-3-8zm146 0h30l-3 8h-24l-3-8z" fill="#E06828" />
     </svg>
   );
 }

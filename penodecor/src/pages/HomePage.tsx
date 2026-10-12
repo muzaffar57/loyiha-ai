@@ -114,13 +114,14 @@ export function HomePage() {
       <div className="mt-4 grid gap-4 lg:mt-8 lg:grid-cols-[1.4fr_0.8fr] lg:items-start">
         <section className="overflow-hidden rounded-3xl bg-brand text-white shadow-[var(--shadow-card)]">
           <div className="grid sm:min-h-[300px] sm:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-            <div className="order-1 h-40 sm:order-2 sm:h-auto">
+            <div className="order-2 h-44 sm:order-2 sm:h-auto">
               <FacadeArt />
             </div>
-            <div className="order-2 flex flex-col justify-end gap-3 p-5 sm:order-1 sm:p-7">
+            <div className="order-1 flex flex-col justify-end gap-3 p-5 sm:p-7">
+              <p className="text-xs font-semibold tracking-[0.14em] text-accent uppercase">PenoDecorPro</p>
               <h1 className="text-[1.65rem] leading-tight font-semibold text-balance">Fasad uchun sifatli dekorativ bezaklar</h1>
               <p className="text-sm leading-6 text-white/80">Uyingizga nafislik va mustahkamlik qo‘shing.</p>
-              <Button to="/katalog" variant="onDark" className="max-w-full self-start">
+              <Button to="/katalog" className="max-w-full self-start bg-accent text-white hover:bg-[#c4531a]">
                 Katalogni ko‘rish
               </Button>
             </div>
