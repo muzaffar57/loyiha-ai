@@ -14,7 +14,7 @@ function CatalogThumb({ slug, image }: { slug: string; image: string | null }) {
   const src = categoryCover(slug, mediaUrl(image));
   return (
     <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-mist">
-      {src ? <img src={src} alt="" className="absolute inset-0 w-full object-cover" style={{ height: "100%" }} /> : <CategoryArt slug={slug} />}
+      {src ? <img src={src} alt="" className="absolute inset-0 w-full object-contain" style={{ height: "100%" }} /> : <CategoryArt slug={slug} />}
     </span>
   );
 }

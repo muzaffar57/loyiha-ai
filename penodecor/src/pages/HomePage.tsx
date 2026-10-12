@@ -68,8 +68,12 @@ function HomeCatalog({ state, onRetry }: { state: StoreLoad<{ items: StoreCatego
             return (
               <li key={category.slug}>
                 <Link to={`/katalog/${category.slug}`} className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
-                  <div className="relative aspect-[4/3] bg-mist">
-                    {src ? <FillImage src={src} /> : <CategoryArt slug={category.slug} />}
+                  <div className="relative aspect-[2/3] bg-white">
+                    {src ? (
+                      <img src={src} alt="" className="absolute inset-0 w-full object-contain" style={{ height: "100%", maxWidth: "none" }} />
+                    ) : (
+                      <CategoryArt slug={category.slug} />
+                    )}
                   </div>
                   <div className="flex items-center gap-1 px-3 py-2.5">
                     <span className="min-w-0 flex-1 text-[13px] leading-4 font-semibold text-ink">{category.name}</span>
