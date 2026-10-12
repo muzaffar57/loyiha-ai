@@ -4,5 +4,5 @@ export const companyPhone: string | null = null;
 
 export const brand = {
   name: "PenodecorPro",
-  tagline: "Fasad bezaklari",
+  tagline: "Zamonaviy fasad dekorlari",
 } as const;

@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useCart } from "../lib/useCart";
 import { Icon } from "./Icon";
+import { Logo } from "./Logo";
 
 const items = [
   { to: "/", label: "Bosh sahifa", icon: "home" as const, end: true },
@@ -51,7 +52,7 @@ export function DesktopNav() {
   return (
     <header className="sticky top-0 z-30 hidden border-b border-line bg-canvas/95 backdrop-blur lg:block">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-8">
-        <span className="text-lg font-semibold text-brand">PenodecorPro</span>
+        <Logo />
         <nav aria-label="Asosiy" className="flex flex-1 items-center gap-1">
           {items.map((item) => (
             <NavLink
