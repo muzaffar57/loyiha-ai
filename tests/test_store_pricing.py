@@ -472,7 +472,21 @@ def test_cornice_scales_from_20cm_cube():
     assert calculate_quote(wide, _request(wide, quantity=1, cornice=CorniceInput(width_cm="15", length_m="1"))).total == "11700.00"
 
     thirty = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="30", length_m="1")))
-    assert thirty.total == "37260.00"
+    assert thirty.applied["profile_width_cm"] == "15.8"
+    assert thirty.total == "28440.00"
+
+    drawn = _product(
+        category,
+        unit=StoreUnit.METER,
+        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, {"base_height_cm": "15", "base_width_cm": "10.3", "base_meter_price": "1200000"}, rule_id=8)],
+    )
+    at_30 = calculate_quote(drawn, _request(drawn, quantity=1, cornice=CorniceInput(width_cm="30", length_m="1")))
+    assert at_30.applied["profile_width_cm"] != "20.6"
+    assert at_30.total == "28320.00"
+    at_25 = calculate_quote(drawn, _request(drawn, quantity=1, cornice=CorniceInput(width_cm="25", length_m="1")))
+    assert Decimal(at_25.applied["profile_width_cm"]) == Decimal("10.3") * 20 / 15 + 1
+    at_40 = calculate_quote(drawn, _request(drawn, quantity=1, cornice=CorniceInput(width_cm="40", length_m="1")))
+    assert Decimal(at_40.applied["profile_width_cm"]) == Decimal("10.3") * 20 / 15 + 2
 
     coated = calculate_quote(
         product,

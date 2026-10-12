@@ -75,7 +75,7 @@ Qoplama koeffitsiyenti umumiy foiz emas.
 `product_slug`, `model`, `base_height_cm`, `base_width_cm`, `base_meter_price`, `is_active`
 
 Har karnizning o‘z balandligi va eni bor. Masalan 15×9 va 15×13 alohida qator.
-1 metr kub = balandlik × en ÷ 2. Mijoz boshqa razmer yozsa, kub shu profilga nisbatan kvadrat bo‘yicha o‘zgaradi.
+1 metr kub = balandlik × en ÷ 2. 20 sm gacha en proporsional o‘sadi. 20–25 sm da qalinlikka 1 sm, 25 sm dan keyin 2 sm qo‘shiladi.
 `base_meter_price` — 1 kub narxi. Qoplama shu narxni 2 baravar qiladi.
 
 ### Shohona_Karnizlar

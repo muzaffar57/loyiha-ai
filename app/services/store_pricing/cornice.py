@@ -1,8 +1,10 @@
 """Shift karnizi va belbog‘.
 
 Har bir karnizning o‘z balandligi va eni bor. 15×9 va 15×13 bir xil kub emas.
+20 sm gacha en balandlik bilan proporsional o‘sadi.
+20 sm dan keyin en to‘liq proporsiya bilan yo‘g‘onlashmaydi:
+25 sm gacha +1 sm, undan keyin +2 sm.
 1 metr kub = (balandlik sm / 100) × (en sm / 100) / 2.
-Mijoz boshqa razmer yozsa, shu profil kvadrat bo‘yicha moslashadi.
 1 kub narxi jadvaldagi base_meter_price. Qoplama shu narxni 2 baravar qiladi.
 """
 from decimal import Decimal
@@ -20,6 +22,8 @@ from app.services.store_pricing.money import (
 from app.services.store_pricing.quote import ComponentLine, Quote, priced_quote
 
 MIN_SIZE_CM = Decimal("15")
+PROPORTIONAL_LIMIT_CM = Decimal("20")
+SMALL_EXTRA_LIMIT_CM = Decimal("25")
 CM = Decimal("100")
 
 
@@ -33,8 +37,8 @@ def quote_cornice(config: dict, *, selection: CorniceInput, quantity: int) -> Qu
     if base_height <= 0 or base_width <= 0:
         raise not_configured("Karniz balandligi yoki eni kiritilmagan.")
     kub_price = read_money(config["base_meter_price"], field="base_meter_price", positive=True)
-    reference_kub = (base_height / CM) * (base_width / CM) / Decimal("2")
-    kub = reference_kub * (size / base_height) ** 2
+    profile_width = profile_width_cm(size, base_height, base_width)
+    kub = (size / CM) * (profile_width / CM) / Decimal("2")
     meter = quantize_money(kub * kub_price)
     if selection.coating:
         meter = quantize_money(meter * Decimal("2"))
@@ -59,6 +63,7 @@ def quote_cornice(config: dict, *, selection: CorniceInput, quantity: int) -> Qu
             "width_cm": measure_text(size),
             "base_height_cm": measure_text(base_height),
             "base_width_cm": measure_text(base_width),
+            "profile_width_cm": measure_text(profile_width),
             "kub_per_meter": measure_text(kub),
             "kub_price": money_text(kub_price) or "",
             "meter_price": money_text(meter) or "",
@@ -68,6 +73,14 @@ def quote_cornice(config: dict, *, selection: CorniceInput, quantity: int) -> Qu
             "unit": "meter",
         },
     )
+
+
+def profile_width_cm(size: Decimal, base_height: Decimal, base_width: Decimal) -> Decimal:
+    if size <= PROPORTIONAL_LIMIT_CM:
+        return base_width * (size / base_height)
+    width_at_20 = base_width * (PROPORTIONAL_LIMIT_CM / base_height)
+    extra = Decimal("1") if size <= SMALL_EXTRA_LIMIT_CM else Decimal("2")
+    return width_at_20 + extra
 
 
 def parse_size(value: str, *, field: str = "Razmer", minimum: Decimal | None = MIN_SIZE_CM) -> Decimal:
