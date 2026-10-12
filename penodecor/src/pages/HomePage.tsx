@@ -67,7 +67,7 @@ function HomeCatalog({ state, onRetry }: { state: StoreLoad<{ items: StoreCatego
             const src = categoryCover(category.slug, mediaUrl(category.image));
             return (
               <li key={category.slug}>
-                <Link to={`/katalog/${category.slug}`} className="block overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
+                <Link to={`/katalog/${category.slug}`} className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
                   <div className="relative aspect-[4/3] bg-mist">
                     {src ? <FillImage src={src} /> : <CategoryArt slug={category.slug} />}
                   </div>
@@ -196,7 +196,12 @@ export function HomePage() {
             className={
               panel === "menu"
                 ? "absolute top-0 bottom-0 left-0 flex w-[min(18rem,86vw)] flex-col bg-white p-4 shadow-xl"
-                : "absolute inset-x-0 bottom-0 max-h-[78vh] overflow-auto rounded-t-3xl bg-white p-4 pb-8 shadow-xl"
+                : "absolute inset-x-0 bottom-0 max-h-[78vh] overflow-auto rounded-t-3xl bg-white p-4 shadow-xl"
+            }
+            style={
+              panel === "menu"
+                ? { paddingTop: "calc(var(--safe-top) + 1rem)", paddingBottom: "calc(var(--safe-bottom) + 1rem)" }
+                : { paddingBottom: "calc(var(--safe-bottom) + 2rem)" }
             }
           >
             <div className="mb-3 flex items-center justify-between">

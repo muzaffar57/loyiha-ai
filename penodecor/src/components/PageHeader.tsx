@@ -13,7 +13,10 @@ export function PageHeader({
 }) {
   const navigate = useNavigate();
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-2 bg-canvas/95 px-2 py-1 backdrop-blur lg:static lg:bg-transparent lg:px-0">
+    <header
+      className="sticky top-0 z-20 flex items-center gap-2 bg-canvas/95 px-2 py-1 backdrop-blur lg:static lg:bg-transparent lg:px-0"
+      style={{ marginTop: "calc(var(--safe-top) * -1)", paddingTop: "max(0.25rem, var(--safe-top))" }}
+    >
       {back ? (
         <button
           type="button"
