@@ -15,7 +15,11 @@ type IconName =
   | "menu"
   | "filter"
   | "diamond"
-  | "truck";
+  | "truck"
+  | "window"
+  | "column"
+  | "cornice"
+  | "layers";
 
 const paths: Record<IconName, string> = {
   home: "M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-5v-5H10v5H5a1 1 0 0 1-1-1v-8.5z",
@@ -35,6 +39,10 @@ const paths: Record<IconName, string> = {
   filter: "M4 7h16M4 12h16M4 17h16M8 5.2v3.6M15 10.2v3.6M11 15.2v3.6",
   diamond: "M12 3.2 20 12 12 20.8 4 12 12 3.2z",
   truck: "M3 7.5h10.5V16H3V7.5zM13.5 10h3.2L20 13.2V16h-6.5V10zM6.2 18.6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8.6 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z",
+  window: "M8 20V11a4 4 0 0 1 8 0v9M12 11.2V20M8 20h8",
+  column: "M9 5.2h6M8.2 7.4h7.6M10 7.4v9.2M14 7.4v9.2M8 18.8h8",
+  cornice: "M5.5 7h13M5.5 10.4c2.4 0 3 2.3 5.4 2.3h7.6M5.5 15h13M5.5 18h13",
+  layers: "M6.5 6.2h11v3.1h-11zM6.5 10.45h11v3.1h-11zM6.5 14.7h11v3.1h-11z",
 };
 
 export function Icon({ name, className = "h-6 w-6" }: { name: IconName; className?: string }) {

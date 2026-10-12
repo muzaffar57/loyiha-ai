@@ -11,6 +11,23 @@ import type { StoreCategory } from "../types/store";
 import { useCart } from "../lib/useCart";
 import { useStoreResource, type StoreLoad } from "../lib/useStoreResource";
 
+const homeLabels: Record<string, { icon: "window" | "column" | "cornice" | "layers"; lines: [string, string] }> = {
+  "rom-va-eshik": { icon: "window", lines: ["Rom va eshik", "bezaklari"] },
+  pilastrlar: { icon: "column", lines: ["Pilastrlar", "va ustunlar"] },
+  "shift-karnizlari": { icon: "cornice", lines: ["Shift karnizlari", "va belbog‘lar"] },
+  "yumaloq-ustunlar": { icon: "column", lines: ["Yumaloq", "ustunlar"] },
+  "shohona-karnizlar": { icon: "cornice", lines: ["Shohona", "karnizlar"] },
+  "tayyor-mahsulotlar": { icon: "layers", lines: ["Tayyor", "mahsulotlar"] },
+};
+
+function homeLabel(slug: string, name: string) {
+  const known = homeLabels[slug];
+  if (known) return known;
+  const words = name.trim().split(/\s+/);
+  const mid = Math.max(1, Math.ceil(words.length / 2));
+  return { icon: "layers" as const, lines: [words.slice(0, mid).join(" "), words.slice(mid).join(" ")] as [string, string] };
+}
+
 const features = [
   { icon: "diamond" as const, label: "Yengil va mustahkam" },
   { icon: "spark" as const, label: "Zamonaviy dizayn" },
@@ -65,19 +82,26 @@ function HomeCatalog({ state, onRetry }: { state: StoreLoad<{ items: StoreCatego
         <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           {items.map((category) => {
             const src = categoryCover(category.slug, mediaUrl(category.image));
+            const label = homeLabel(category.slug, category.name);
             return (
               <li key={category.slug}>
-                <Link to={`/katalog/${category.slug}`} className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
+                <Link to={`/katalog/${category.slug}`} className="block overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
                   <div className="relative aspect-[2/3] bg-white">
                     {src ? (
                       <img src={src} alt="" className="absolute inset-0 w-full object-cover" style={{ height: "100%", maxWidth: "none" }} />
                     ) : (
                       <CategoryArt slug={category.slug} />
                     )}
-                  </div>
-                  <div className="flex items-center gap-1 px-3 py-2.5">
-                    <span className="min-w-0 flex-1 text-[13px] leading-4 font-semibold text-ink">{category.name}</span>
-                    <Icon name="chevron" className="h-4 w-4 shrink-0 text-muted" />
+                    <div className="absolute inset-x-2 bottom-2 flex items-center gap-1.5 rounded-2xl bg-brand py-1.5 pr-1.5 pl-2 text-white">
+                      <Icon name={label.icon} className="h-5 w-5 shrink-0" />
+                      <span className="min-w-0 flex-1 text-[10px] leading-[1.15] font-bold tracking-wide uppercase">
+                        <span className="block">{label.lines[0]}</span>
+                        {label.lines[1] ? <span className="block">{label.lines[1]}</span> : null}
+                      </span>
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent">
+                        <Icon name="chevron" className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </div>
                 </Link>
               </li>
