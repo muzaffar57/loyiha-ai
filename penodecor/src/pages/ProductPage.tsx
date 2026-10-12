@@ -2,8 +2,9 @@ import { Link, useParams } from "react-router-dom";
 import { CategoryArt } from "../components/CategoryArt";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
+import { CorniceQuote } from "../components/CorniceQuote";
 import { PriceQuote } from "../components/PriceQuote";
-import { isManualQuoteCategory } from "../lib/priceQuote";
+import { isCorniceCategory, isManualQuoteCategory } from "../lib/priceQuote";
 import { formatStoredPrice, getProduct, mediaUrl, unitLabel } from "../lib/storeApi";
 import { useStoreResource } from "../lib/useStoreResource";
 
@@ -74,7 +75,7 @@ export function ProductPage() {
                 <dd className="font-semibold">{product.available_quantity}</dd>
               </div>
             ) : null}
-            {isManualQuoteCategory(product.category.slug) ? null : (
+            {isManualQuoteCategory(product.category.slug) || isCorniceCategory(product.category.slug) ? null : (
               <div className="flex justify-between gap-3 rounded-2xl bg-mist px-4 py-3">
                 <dt className="text-muted">Narx</dt>
                 <dd className="text-right font-semibold">
@@ -88,6 +89,7 @@ export function ProductPage() {
               <PriceQuote manual />
             </div>
           ) : null}
+          {isCorniceCategory(product.category.slug) ? <CorniceQuote productId={product.id} /> : null}
         </article>
       ) : null}
     </div>

@@ -752,8 +752,8 @@ def _assert_quotes(client: TestClient, factory, *, percent: str) -> None:
         "/api/store/pricing/calculate",
         json={"product_id": ids["karniz-1"], "quantity": 1, "cornice": {"width_cm": "50", "length_m": "2", "coating": False}},
     )
-    assert cornice.json()["subtotal"] == "120000.00"
-    assert cornice.json()["total"] == "132000.00"
+    assert cornice.json()["subtotal"] == "5175.00"
+    assert cornice.json()["total"] == "5692.50"
     assert "coating_multiplier" not in cornice.json()["applied"]
 
     shohona = client.post(

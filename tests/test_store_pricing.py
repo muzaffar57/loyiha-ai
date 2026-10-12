@@ -442,40 +442,38 @@ def test_round_diameter_band_boundaries():
     assert conflict.value.code == "CONFLICTING_RULES"
 
 
-def test_cornice_width_proportional_formula():
+def test_cornice_scales_from_20cm_cube():
     category = _category("shift-karnizlari", category_id=1)
-    config = {"base_width_cm": "25", "base_meter_price": "30000", "coating_multiplier": "2"}
     product = _product(
         category,
         unit=StoreUnit.METER,
-        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, config)],
+        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, {"base_width_cm": "20", "base_meter_price": "1200000"})],
     )
-    quote = calculate_quote(
+
+    twenty = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="20", length_m="1")))
+    assert twenty.applied["kub_per_meter"] == "0.0138"
+    assert twenty.total == "16560.00"
+
+    fifteen = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="15", length_m="1")))
+    assert fifteen.applied["kub_per_meter"] == "0.0077625"
+    assert fifteen.total == "9315.00"
+
+    thirty = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="30", length_m="1")))
+    assert thirty.total == "37260.00"
+
+    coated = calculate_quote(
         product,
-        _request(product, quantity=1, cornice=CorniceInput(width_cm="20", length_m="2")),
+        _request(product, quantity=1, cornice=CorniceInput(width_cm="15", length_m="1", coating=True)),
     )
-    assert quote.applied["meter_price"] == "24000.00"
-    assert quote.total == "48000.00"
-    assert quote.applied["coating"] == "false"
+    assert coated.total == "18630.00"
+    assert coated.applied["coating"] == "true"
 
-    with pytest.raises(PricingError) as coating:
-        calculate_quote(
-            product,
-            _request(product, quantity=1, cornice=CorniceInput(width_cm="20", length_m="2", coating=True)),
-        )
-    assert coating.value.code == "PRICE_NOT_CONFIGURED"
+    two_meters = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="20", length_m="2")))
+    assert two_meters.total == "33120.00"
 
-    narrow = _product(
-        category,
-        unit=StoreUnit.METER,
-        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, {"base_width_cm": "8", "base_meter_price": "1"})],
-    )
-    rounded = calculate_quote(
-        narrow,
-        _request(narrow, quantity=1, cornice=CorniceInput(width_cm="1", length_m="3")),
-    )
-    assert rounded.applied["meter_price"] == "0.13"
-    assert rounded.total == "0.39"
+    with pytest.raises(PricingError) as small:
+        calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="14", length_m="1")))
+    assert small.value.code == "INVALID_INPUT"
 
 
 def test_shohona_requires_manual_quote():

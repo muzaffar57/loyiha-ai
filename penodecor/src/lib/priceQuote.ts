@@ -4,6 +4,10 @@ export function isManualQuoteCategory(slug: string): boolean {
   return slug === "shohona-karnizlar" || slug.startsWith("shohona-");
 }
 
+export function isCorniceCategory(slug: string): boolean {
+  return slug === "shift-karnizlari" || slug.startsWith("shift-") || slug.includes("belbog");
+}
+
 export function displayTotal(quote: PriceQuoteResult | null | undefined, manual = false): string | null {
   if (manual) return null;
   if (!quote || quote.requires_manual_quote || quote.status !== "PRICED") return null;

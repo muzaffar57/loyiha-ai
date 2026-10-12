@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { adjustmentCaption, baseSellingPrice, displayTotal, isManualQuoteCategory } from "./priceQuote.ts";
+import { adjustmentCaption, baseSellingPrice, displayTotal, isCorniceCategory, isManualQuoteCategory } from "./priceQuote.ts";
 import type { PriceQuoteResult } from "../types/store.ts";
 
 function quote(overrides: Partial<PriceQuoteResult> = {}): PriceQuoteResult {
@@ -22,6 +22,10 @@ test("shohona toifasida narx individual hisoblanadi", () => {
   assert.equal(isManualQuoteCategory("shohona-karnizlar"), true);
   assert.equal(isManualQuoteCategory("shohona-katta"), true);
   assert.equal(isManualQuoteCategory("shift-karnizlari"), false);
+  assert.equal(isCorniceCategory("shift-karnizlari"), true);
+  assert.equal(isCorniceCategory("shift-karnizi"), true);
+  assert.equal(isCorniceCategory("belbog"), true);
+  assert.equal(isCorniceCategory("rom-va-eshik"), false);
 });
 
 test("qo‘lda narx va bo‘sh konfiguratsiya summa ko‘rsatmaydi", () => {
