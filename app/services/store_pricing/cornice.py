@@ -1,28 +1,40 @@
 """Shift karnizi va belbog‘.
 
-Asosiy profil: 20 sm, 1 metrda 0,0138 kub.
-Mijoz razmeri shu asosdan kvadrat bo‘yicha moslashadi, chunki en ham balandlik bilan o‘sadi.
+Har bir karnizning o‘z balandligi va eni bor. 15×9 va 15×13 bir xil kub emas.
+1 metr kub = (balandlik sm / 100) × (en sm / 100) / 2.
+Mijoz boshqa razmer yozsa, shu profil kvadrat bo‘yicha moslashadi.
 1 kub narxi jadvaldagi base_meter_price. Qoplama shu narxni 2 baravar qiladi.
 """
 from decimal import Decimal
 
 from app.schemas.store_pricing import CorniceInput
 from app.services.store_pricing.errors import invalid, not_configured
-from app.services.store_pricing.money import measure_text, money_text, parse_request_decimal, quantize_money, read_money
+from app.services.store_pricing.money import (
+    measure_text,
+    money_text,
+    parse_config_decimal,
+    parse_request_decimal,
+    quantize_money,
+    read_money,
+)
 from app.services.store_pricing.quote import ComponentLine, Quote, priced_quote
 
-REFERENCE_CM = Decimal("20")
-REFERENCE_KUB_PER_METER = Decimal("0.0138")
 MIN_SIZE_CM = Decimal("15")
+CM = Decimal("100")
 
 
 def quote_cornice(config: dict, *, selection: CorniceInput, quantity: int) -> Quote:
     size = parse_size(selection.width_cm)
     length = parse_size(selection.length_m, field="Uzunlik", minimum=None)
-    if "base_meter_price" not in config:
-        raise not_configured("1 kub narxi kiritilmagan.")
+    if "base_height_cm" not in config or "base_width_cm" not in config or "base_meter_price" not in config:
+        raise not_configured("Karniz o‘lchami yoki 1 kub narxi kiritilmagan.")
+    base_height = parse_config_decimal(config["base_height_cm"], field="base_height_cm")
+    base_width = parse_config_decimal(config["base_width_cm"], field="base_width_cm")
+    if base_height <= 0 or base_width <= 0:
+        raise not_configured("Karniz balandligi yoki eni kiritilmagan.")
     kub_price = read_money(config["base_meter_price"], field="base_meter_price", positive=True)
-    kub = REFERENCE_KUB_PER_METER * (size / REFERENCE_CM) ** 2
+    reference_kub = (base_height / CM) * (base_width / CM) / Decimal("2")
+    kub = reference_kub * (size / base_height) ** 2
     meter = quantize_money(kub * kub_price)
     if selection.coating:
         meter = quantize_money(meter * Decimal("2"))
@@ -45,7 +57,8 @@ def quote_cornice(config: dict, *, selection: CorniceInput, quantity: int) -> Qu
         applied={
             "family": "cornice",
             "width_cm": measure_text(size),
-            "reference_width_cm": measure_text(REFERENCE_CM),
+            "base_height_cm": measure_text(base_height),
+            "base_width_cm": measure_text(base_width),
             "kub_per_meter": measure_text(kub),
             "kub_price": money_text(kub_price) or "",
             "meter_price": money_text(meter) or "",

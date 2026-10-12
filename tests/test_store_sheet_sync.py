@@ -557,7 +557,7 @@ def _workbook(percent: str = "10") -> dict[str, list[list[str]]]:
         ],
         CORNICE_SHEET: [
             list(CORNICE_COLUMNS),
-            ["karniz-1", "Klassik", "25", "30000", "true"],
+            ["karniz-1", "Klassik", "20", "13.80", "30000", "true"],
         ],
         SHOHONA_SHEET: [
             list(SHOHONA_COLUMNS),

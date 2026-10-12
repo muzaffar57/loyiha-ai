@@ -447,7 +447,7 @@ def test_cornice_scales_from_20cm_cube():
     product = _product(
         category,
         unit=StoreUnit.METER,
-        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, {"base_width_cm": "20", "base_meter_price": "1200000"})],
+        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, {"base_height_cm": "20", "base_width_cm": "13.80", "base_meter_price": "1200000"})],
     )
 
     twenty = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="20", length_m="1")))
@@ -457,6 +457,19 @@ def test_cornice_scales_from_20cm_cube():
     fifteen = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="15", length_m="1")))
     assert fifteen.applied["kub_per_meter"] == "0.0077625"
     assert fifteen.total == "9315.00"
+
+    narrow = _product(
+        category,
+        unit=StoreUnit.METER,
+        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, {"base_height_cm": "15", "base_width_cm": "9", "base_meter_price": "1200000"}, rule_id=6)],
+    )
+    wide = _product(
+        category,
+        unit=StoreUnit.METER,
+        rules=[_rule(StorePricingRuleType.WIDTH_PROPORTIONAL, {"base_height_cm": "15", "base_width_cm": "13", "base_meter_price": "1200000"}, rule_id=7)],
+    )
+    assert calculate_quote(narrow, _request(narrow, quantity=1, cornice=CorniceInput(width_cm="15", length_m="1"))).total == "8100.00"
+    assert calculate_quote(wide, _request(wide, quantity=1, cornice=CorniceInput(width_cm="15", length_m="1"))).total == "11700.00"
 
     thirty = calculate_quote(product, _request(product, quantity=1, cornice=CorniceInput(width_cm="30", length_m="1")))
     assert thirty.total == "37260.00"

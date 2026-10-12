@@ -402,10 +402,11 @@ def _cornices(rows: list[tuple[int, dict[str, str]]], errors: _Errors) -> list[R
             continue
         seen.add(slug)
         active = _bool_cell(row["is_active"], CORNICE_SHEET, row_number, errors)
+        height = _measure(row["base_height_cm"], CORNICE_SHEET, row_number, errors)
         width = _measure(row["base_width_cm"], CORNICE_SHEET, row_number, errors)
         price = _price(row["base_meter_price"], CORNICE_SHEET, row_number, errors, required=True)
         model = row["model"].strip()
-        if active is None or width is None or not price or not model:
+        if active is None or height is None or width is None or not price or not model:
             if not model:
                 errors.add(CORNICE_SHEET, row_number, "model kiritilmagan.")
             continue
@@ -414,7 +415,12 @@ def _cornices(rows: list[tuple[int, dict[str, str]]], errors: _Errors) -> list[R
                 product_slug=slug,
                 rule_type=StorePricingRuleType.WIDTH_PROPORTIONAL,
                 name=model[:160],
-                config={"family": "cornice", "base_width_cm": width, "base_meter_price": price},
+                config={
+                    "family": "cornice",
+                    "base_height_cm": height,
+                    "base_width_cm": width,
+                    "base_meter_price": price,
+                },
                 is_active=active,
             )
         )

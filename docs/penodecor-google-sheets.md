@@ -72,10 +72,11 @@ Qoplama koeffitsiyenti umumiy foiz emas.
 
 ### Shift_Karnizlari
 
-`product_slug`, `model`, `base_width_cm`, `base_meter_price`, `is_active`
+`product_slug`, `model`, `base_height_cm`, `base_width_cm`, `base_meter_price`, `is_active`
 
-`yangi metr narxi = tanlangan en / bazaviy en × bazaviy metr narxi`.
-Qoplama koeffitsiyenti bu varaqda yo‘q.
+Har karnizning o‘z balandligi va eni bor. Masalan 15×9 va 15×13 alohida qator.
+1 metr kub = balandlik × en ÷ 2. Mijoz boshqa razmer yozsa, kub shu profilga nisbatan kvadrat bo‘yicha o‘zgaradi.
+`base_meter_price` — 1 kub narxi. Qoplama shu narxni 2 baravar qiladi.
 
 ### Shohona_Karnizlar
 

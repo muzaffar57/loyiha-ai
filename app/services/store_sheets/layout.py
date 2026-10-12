@@ -71,6 +71,7 @@ ROUND_COLUMNS = (
 CORNICE_COLUMNS = (
     "product_slug",
     "model",
+    "base_height_cm",
     "base_width_cm",
     "base_meter_price",
     "is_active",

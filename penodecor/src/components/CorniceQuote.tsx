@@ -57,7 +57,7 @@ export function CorniceQuote({ productId }: { productId: number }) {
   return (
     <form className="mt-4 rounded-3xl border border-line bg-white p-4" onSubmit={onSubmit}>
       <h3 className="text-base font-semibold">Razmer bo‘yicha narx</h3>
-      <p className="mt-2 text-sm leading-6 text-muted">Eng kichik razmer 15 sm. 20 sm da 1 metr 0,0138 kub. Boshqa razmer shunga moslab hisoblanadi.</p>
+      <p className="mt-2 text-sm leading-6 text-muted">Har karnizning o‘z eni bor. Yozgan razmeringiz shu karnizga moslab hisoblanadi. Eng kichik razmer 15 sm.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1 text-sm font-semibold">
           Razmer, sm
