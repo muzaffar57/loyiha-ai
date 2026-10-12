@@ -5,9 +5,19 @@ import { EmptyState } from "../components/EmptyState";
 import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { SearchField } from "../components/SearchField";
+import { categoryCover } from "../data/categoryCovers";
 import { listCategories, mediaUrl } from "../lib/storeApi";
 import { useStoreResource } from "../lib/useStoreResource";
 import type { StoreCategory } from "../types/store";
+
+function CatalogThumb({ slug, image }: { slug: string; image: string | null }) {
+  const src = categoryCover(slug, mediaUrl(image));
+  return (
+    <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-mist">
+      {src ? <img src={src} alt="" className="absolute inset-0 w-full object-cover" style={{ height: "100%" }} /> : <CategoryArt slug={slug} />}
+    </span>
+  );
+}
 
 function matches(category: StoreCategory, query: string): boolean {
   const needle = query.trim().toLocaleLowerCase("uz");
@@ -54,9 +64,7 @@ function CatalogResults({ query, onRetry }: { query: string; onRetry: () => void
         {results.map((category) => (
           <li key={category.slug}>
             <Link to={`/katalog/${category.slug}`} className="flex min-h-[5.5rem] items-center gap-3 rounded-2xl border border-line bg-canvas p-2 pr-3">
-              <span className="h-20 w-20 shrink-0 overflow-hidden rounded-xl">
-                {mediaUrl(category.image) ? <img src={mediaUrl(category.image) ?? ""} alt="" className="h-full w-full object-cover" /> : <CategoryArt slug={category.slug} />}
-              </span>
+              <CatalogThumb slug={category.slug} image={category.image} />
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold leading-5">{category.name}</span>
                 {category.description ? <span className="mt-1 block text-sm leading-5 text-muted">{category.description}</span> : null}

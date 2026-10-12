@@ -5,6 +5,7 @@ import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
 import { ProductCard } from "../components/ProductCard";
 import { SearchField } from "../components/SearchField";
+import { categoryCover } from "../data/categoryCovers";
 import { getCategory, listProducts, listStock, mediaUrl } from "../lib/storeApi";
 import { useStoreResource } from "../lib/useStoreResource";
 
@@ -44,13 +45,15 @@ function CategoryBody({ slug, query }: { slug: string; query: string }) {
 
   const category = categoryState.data;
   const readyMade = slug === "tayyor-mahsulotlar";
-  const image = mediaUrl(category.image);
+  const image = categoryCover(category.slug, mediaUrl(category.image));
 
   return (
     <>
       <PageHeader title={category.name} back />
       <div className="mt-2 overflow-hidden rounded-3xl border border-line">
-        <div className="h-36">{image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <CategoryArt slug={category.slug} />}</div>
+        <div className="relative h-36 bg-mist">
+          {image ? <img src={image} alt="" className="absolute inset-0 w-full object-cover" style={{ height: "100%" }} /> : <CategoryArt slug={category.slug} />}
+        </div>
       </div>
       {category.parent ? (
         <p className="mt-3 text-sm text-muted">

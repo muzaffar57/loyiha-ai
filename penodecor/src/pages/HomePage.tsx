@@ -1,84 +1,84 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "../components/Button";
-import { ProductCard } from "../components/ProductCard";
-import { CategoryArt, FacadeArt } from "../components/CategoryArt";
+import { CategoryArt } from "../components/CategoryArt";
 import { EmptyState } from "../components/EmptyState";
 import { Icon } from "../components/Icon";
 import { Logo } from "../components/Logo";
 import { SearchField } from "../components/SearchField";
-import { listCategories, listProducts, mediaUrl } from "../lib/storeApi";
-import { useStoreResource } from "../lib/useStoreResource";
+import { categoryCover, sortHomeCategories } from "../data/categoryCovers";
+import { listCategories, mediaUrl } from "../lib/storeApi";
+import type { StoreCategory } from "../types/store";
+import { useCart } from "../lib/useCart";
+import { useStoreResource, type StoreLoad } from "../lib/useStoreResource";
 
 const features = [
-  { icon: "feather" as const, label: "Yengil va mustahkam" },
+  { icon: "diamond" as const, label: "Yengil va mustahkam" },
   { icon: "spark" as const, label: "Zamonaviy dizayn" },
   { icon: "clock" as const, label: "Tez ishlab chiqarish" },
-  { icon: "ruler" as const, label: "O‘lchovli buyurtma" },
+  { icon: "truck" as const, label: "O‘lchovli buyurtma" },
 ];
 
-function HomeCatalog() {
-  const state = useStoreResource("home-categories", () => listCategories());
+const menuLinks = [
+  { to: "/", label: "Bosh sahifa" },
+  { to: "/katalog", label: "Katalog" },
+  { to: "/savat", label: "Savat" },
+  { to: "/buyurtmalar", label: "Buyurtmalar" },
+  { to: "/profil", label: "Profil" },
+  { to: "/kompaniya", label: "Biz haqimizda" },
+];
+
+function FillImage({ src, position = "center" }: { src: string; position?: string }) {
   return (
-    <section className="mt-8">
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <h2 className="text-lg font-semibold">Katalog</h2>
-        <Button to="/katalog" variant="ghost" className="min-h-11 px-3">
-          Hammasi
-        </Button>
-      </div>
-      {state.status === "loading" ? <div className="h-28 animate-pulse rounded-3xl bg-mist" aria-busy="true" /> : null}
-      {state.status === "error" ? <EmptyState title="Katalog yuklanmadi" text={state.message} /> : null}
-      {state.status === "ready" ? (
-        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-          {state.data.items.map((category) => (
-            <li key={category.slug}>
-              <Link to={`/katalog/${category.slug}`} className="block overflow-hidden rounded-2xl border border-line bg-canvas">
-                <div className="aspect-[4/3] overflow-hidden">
-                  {mediaUrl(category.image) ? (
-                    <img src={mediaUrl(category.image) ?? ""} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <CategoryArt slug={category.slug} />
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-sm font-semibold leading-5">{category.name}</p>
-                  {category.description ? <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">{category.description}</p> : null}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </section>
+    <img
+      src={src}
+      alt=""
+      className="absolute inset-0 w-full object-cover"
+      style={{ height: "100%", maxWidth: "none", objectPosition: position }}
+    />
   );
 }
 
-function FeaturedProducts() {
-  const state = useStoreResource("featured", () => listProducts({ featured: true, pageSize: 8 }));
+function HomeCatalog({ state, onRetry }: { state: StoreLoad<{ items: StoreCategory[] }>; onRetry: () => void }) {
+  const items = state.status === "ready" ? sortHomeCategories(state.data.items) : [];
+
   return (
-    <section className="mt-8">
-      <h2 className="mb-3 text-lg font-semibold">Mashhur mahsulotlar</h2>
-      {state.status === "loading" ? <div className="h-28 animate-pulse rounded-3xl bg-mist" aria-busy="true" /> : null}
-      {state.status === "error" ? <EmptyState title="Mahsulotlar yuklanmadi" text={state.message} /> : null}
-      {state.status === "ready" && state.data.items.length === 0 ? (
+    <section className="mt-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-ink">Katalog bo‘limlari</h2>
+        <Link to="/katalog" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-accent">
+          Hammasi <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+      {state.status === "loading" ? <div className="h-40 animate-pulse rounded-3xl bg-white" aria-busy="true" /> : null}
+      {state.status === "error" ? (
         <EmptyState
-          title="Mahsulotlar hali kiritilmagan"
-          text="Narx va mahsulot kartochkalari administrator tomonidan qo‘shiladi. Hozircha katalog bo‘limlarini ko‘rishingiz mumkin."
+          title="Katalog yuklanmadi"
+          text={state.message}
           action={
-            <Button to="/katalog" variant="secondary">
-              Bo‘limlarni ochish
-            </Button>
+            <button type="button" className="inline-flex min-h-12 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white" onClick={onRetry}>
+              Qayta urinish
+            </button>
           }
         />
       ) : null}
-      {state.status === "ready" && state.data.items.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {state.data.items.map((product) => (
-            <li key={product.slug}>
-              <ProductCard product={product} />
-            </li>
-          ))}
+      {state.status === "ready" ? (
+        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          {items.map((category) => {
+            const src = categoryCover(category.slug, mediaUrl(category.image));
+            return (
+              <li key={category.slug}>
+                <Link to={`/katalog/${category.slug}`} className="block overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
+                  <div className="relative aspect-[4/3] bg-mist">
+                    {src ? <FillImage src={src} /> : <CategoryArt slug={category.slug} />}
+                  </div>
+                  <div className="flex items-center gap-1 px-3 py-2.5">
+                    <span className="min-w-0 flex-1 text-[13px] leading-4 font-semibold text-ink">{category.name}</span>
+                    <Icon name="chevron" className="h-4 w-4 shrink-0 text-muted" />
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
     </section>
@@ -87,7 +87,20 @@ function FeaturedProducts() {
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { count } = useCart();
   const [query, setQuery] = useState("");
+  const [panel, setPanel] = useState<"menu" | "filter" | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const categories = useStoreResource(`home-categories:${attempt}`, () => listCategories());
+
+  useEffect(() => {
+    if (!panel) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setPanel(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [panel]);
 
   function openSearch() {
     const trimmed = query.trim();
@@ -95,53 +108,131 @@ export function HomePage() {
   }
 
   return (
-    <div className="pt-2 lg:pt-8">
-      <div className="flex items-center justify-between lg:hidden">
-        <Logo />
-      </div>
+    <div className="-mx-4 lg:mx-0" style={{ marginTop: "calc(var(--safe-top) * -1)" }}>
+      <header className="sticky top-0 z-20 bg-white lg:hidden" style={{ paddingTop: "var(--safe-top)" }}>
+        <div className="relative flex h-14 items-center justify-between px-2">
+          <button type="button" className="grid h-11 w-11 place-items-center text-brand" aria-label="Menyu" onClick={() => setPanel("menu")}>
+            <Icon name="menu" className="h-6 w-6" />
+          </button>
+          <div className="pointer-events-none absolute inset-x-14 inset-y-0 flex items-center justify-center">
+            <div className="pointer-events-auto">
+              <Logo />
+            </div>
+          </div>
+          <Link to="/savat" aria-label={count > 0 ? `Savat, ${count} ta` : "Savat"} className="relative grid h-11 w-11 place-items-center text-brand">
+            <Icon name="cart" className="h-6 w-6" />
+            {count > 0 ? (
+              <span className="absolute top-1 right-0.5 grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[10px] leading-5 font-bold text-white">
+                {count > 99 ? "99+" : count}
+              </span>
+            ) : null}
+          </Link>
+        </div>
+      </header>
 
-      <div className="mt-3 lg:mt-0">
+      <div className="px-4 pt-3 pb-2 lg:px-0 lg:pt-8">
         <SearchField
           id="home-search"
           value={query}
           onChange={setQuery}
           onSubmit={openSearch}
+          onFilter={() => setPanel("filter")}
           label="Katalogdan qidirish"
-          placeholder="Katalogdan qidirish"
+          placeholder="Katalogdan qidirish..."
         />
-      </div>
 
-      <div className="mt-4 grid gap-4 lg:mt-8 lg:grid-cols-[1.4fr_0.8fr] lg:items-start">
-        <section className="overflow-hidden rounded-3xl bg-brand text-white shadow-[var(--shadow-card)]">
-          <div className="grid sm:min-h-[300px] sm:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-            <div className="order-2 h-44 sm:order-2 sm:h-auto">
-              <FacadeArt />
-            </div>
-            <div className="order-1 flex flex-col justify-end gap-3 p-5 sm:p-7">
-              <p className="text-xs font-semibold tracking-[0.14em] text-accent uppercase">PenoDecorPro</p>
-              <h1 className="text-[1.65rem] leading-tight font-semibold text-balance">Fasad uchun sifatli dekorativ bezaklar</h1>
-              <p className="text-sm leading-6 text-white/80">Uyingizga nafislik va mustahkamlik qo‘shing.</p>
-              <Button to="/katalog" className="max-w-full self-start bg-accent text-white hover:bg-[#c4531a]">
-                Katalogni ko‘rish
-              </Button>
-            </div>
+        <section className="relative mt-3 h-[19.5rem] overflow-hidden rounded-[1.6rem] shadow-[var(--shadow-card)]">
+          <FillImage src="/home/hero.jpg" position="72% center" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#193458] via-[#193458]/88 to-[#193458]/10" />
+          <div className="relative flex h-full flex-col justify-end p-5 pb-8 text-white">
+            <p className="text-[11px] font-bold tracking-[0.16em] text-accent uppercase">Zamonaviy fasadlar</p>
+            <h1 className="mt-2 max-w-[16rem] text-[1.7rem] leading-[1.12] font-extrabold text-balance">
+              Fasad uchun sifatli dekorativ <span className="text-accent">bezaklar</span>
+            </h1>
+            <p className="mt-2 max-w-[16rem] text-sm leading-5 text-white/85">Uyingizga nafislik va mustahkamlik qo‘shing.</p>
+            <Link to="/katalog" className="mt-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-white hover:bg-[#d46522]">
+              Katalogni ko‘rish <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+          <div className="absolute bottom-3 left-0 flex w-full justify-center gap-1.5" aria-hidden="true">
+            <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            <span className="h-1.5 w-1.5 rounded-full bg-white/45" />
+            <span className="h-1.5 w-1.5 rounded-full bg-white/45" />
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-4 lg:grid-cols-2">
+        <ul className="mt-4 grid grid-cols-4 gap-2">
           {features.map((feature) => (
-            <div key={feature.label} className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl bg-mist px-2 py-3 text-center">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-brand-soft text-brand">
+            <li key={feature.label} className="flex min-h-[6.5rem] flex-col items-center justify-start rounded-2xl bg-white px-1 py-3 text-center shadow-[var(--shadow-card)]">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-[#f3f5f8] text-accent">
                 <Icon name={feature.icon} className="h-5 w-5" />
               </span>
-              <span className="text-xs leading-4 font-medium text-ink">{feature.label}</span>
-            </div>
+              <span className="mt-2 text-[10px] leading-3 font-medium text-ink">{feature.label}</span>
+            </li>
           ))}
+        </ul>
+
+        <HomeCatalog state={categories} onRetry={() => setAttempt((value) => value + 1)} />
+
+        <section className="relative mt-4 h-36 overflow-hidden rounded-[1.6rem] shadow-[var(--shadow-card)]">
+          <FillImage src="/home/promo.jpg" position="right center" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#193458] via-[#193458]/82 to-[#193458]/15" />
+          <div className="relative flex h-full max-w-[16rem] flex-col justify-center px-5 text-white">
+            <p className="text-base leading-5 font-bold">Individual loyihalar uchun maxsus yechimlar</p>
+            <Link to="/kompaniya" className="mt-3 inline-flex min-h-10 w-fit items-center gap-2 rounded-full bg-accent px-4 text-sm font-semibold text-white hover:bg-[#d46522]">
+              Batafsil <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </section>
       </div>
 
-      <HomeCatalog />
-      <FeaturedProducts />
+      {panel ? (
+        <div className="fixed inset-0 z-40">
+          <button type="button" className="absolute inset-0 bg-[#172235]/45" aria-label="Yopish" onClick={() => setPanel(null)} />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={panel === "menu" ? "Menyu" : "Bo‘limlar"}
+            className={
+              panel === "menu"
+                ? "absolute top-0 bottom-0 left-0 flex w-[min(18rem,86vw)] flex-col bg-white p-4 shadow-xl"
+                : "absolute inset-x-0 bottom-0 max-h-[78vh] overflow-auto rounded-t-3xl bg-white p-4 pb-8 shadow-xl"
+            }
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold">{panel === "menu" ? "Menyu" : "Bo‘limlar"}</h2>
+              <button type="button" className="grid h-11 w-11 place-items-center rounded-full text-ink" aria-label="Yopish" onClick={() => setPanel(null)}>
+                <Icon name="close" />
+              </button>
+            </div>
+            {panel === "menu" ? (
+              <ul>
+                {menuLinks.map((item) => (
+                  <li key={item.to} className="border-b border-line last:border-b-0">
+                    <Link to={item.to} onClick={() => setPanel(null)} className="flex min-h-12 items-center text-base font-semibold">
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {panel === "filter" && categories.status === "loading" ? <p className="text-sm text-muted">Yuklanmoqda...</p> : null}
+            {panel === "filter" && categories.status === "error" ? <p className="text-sm text-muted">{categories.message}</p> : null}
+            {panel === "filter" && categories.status === "ready" ? (
+              <ul>
+                {sortHomeCategories(categories.data.items).map((category) => (
+                  <li key={category.slug} className="border-b border-line last:border-b-0">
+                    <Link to={`/katalog/${category.slug}`} onClick={() => setPanel(null)} className="flex min-h-12 items-center justify-between gap-3 text-base font-semibold">
+                      {category.name}
+                      <Icon name="chevron" className="h-5 w-5 text-muted" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

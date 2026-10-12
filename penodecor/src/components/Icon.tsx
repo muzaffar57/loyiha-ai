@@ -11,7 +11,11 @@ type IconName =
   | "feather"
   | "spark"
   | "clock"
-  | "ruler";
+  | "ruler"
+  | "menu"
+  | "filter"
+  | "diamond"
+  | "truck";
 
 const paths: Record<IconName, string> = {
   home: "M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-5v-5H10v5H5a1 1 0 0 1-1-1v-8.5z",
@@ -27,6 +31,10 @@ const paths: Record<IconName, string> = {
   spark: "M12 3l1.4 5.2L18 9.6l-4.6 1.4L12 16l-1.4-5L6 9.6l4.6-1.4L12 3zM18 15l.6 2 2 .6-2 .6-.6 2-.6-2-2-.6 2-.6.6-2z",
   clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zm0-13v5l3 2",
   ruler: "M4 16.5 16.5 4l3.5 3.5L7.5 20 4 16.5zm4.2-1.2 1.6-1.6m1.3 1.3 1.6-1.6m1.3 1.3 1.6-1.6",
+  menu: "M4 7h16M4 12h16M4 17h16",
+  filter: "M4 7h16M4 12h16M4 17h16M8 5.2v3.6M15 10.2v3.6M11 15.2v3.6",
+  diamond: "M12 3.2 20 12 12 20.8 4 12 12 3.2z",
+  truck: "M3 7.5h10.5V16H3V7.5zM13.5 10h3.2L20 13.2V16h-6.5V10zM6.2 18.6a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8.6 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z",
 };
 
 export function Icon({ name, className = "h-6 w-6" }: { name: IconName; className?: string }) {

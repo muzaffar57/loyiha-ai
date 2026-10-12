@@ -28,14 +28,14 @@ export function BottomNav() {
               end={item.end}
               className={({ isActive }) =>
                 `relative flex min-h-[var(--nav-height)] flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-semibold ${
-                  isActive ? "text-brand" : "text-muted"
+                  isActive ? "text-accent" : "text-muted"
                 }`
               }
             >
               <Icon name={item.icon} className="h-6 w-6" />
               <span className="max-w-full truncate">{item.label}</span>
               {item.to === "/savat" && count > 0 ? (
-                <span className="absolute top-1.5 right-[calc(50%-1.4rem)] grid min-w-5 place-items-center rounded-full bg-brand px-1 text-[10px] leading-5 text-white">
+                <span className="absolute top-1 right-[calc(50%-1.35rem)] grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[10px] leading-5 font-bold text-white">
                   {count > 99 ? "99+" : count}
                 </span>
               ) : null}
@@ -61,7 +61,7 @@ export function DesktopNav() {
               end={item.end}
               className={({ isActive }) =>
                 `inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold ${
-                  isActive ? "bg-brand-soft text-brand" : "text-muted hover:text-ink"
+                  isActive ? "bg-brand-soft text-accent" : "text-muted hover:text-ink"
                 }`
               }
             >
