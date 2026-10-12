@@ -92,13 +92,16 @@ function HomeCatalog({ state, onRetry }: { state: StoreLoad<{ items: StoreCatego
                     ) : (
                       <CategoryArt slug={category.slug} />
                     )}
-                    <div className="absolute inset-x-1.5 bottom-1.5 flex items-center gap-1 rounded-xl bg-brand py-1 pr-1 pl-1.5 text-white lg:inset-x-3 lg:bottom-3 lg:gap-2 lg:rounded-2xl lg:py-2 lg:pr-2 lg:pl-3">
-                      <Icon name={label.icon} className="h-4 w-4 shrink-0 lg:h-6 lg:w-6" />
-                      <span className="min-w-0 flex-1 text-[9px] leading-[1.15] font-bold tracking-tight uppercase lg:text-sm lg:leading-5 lg:tracking-wide">
+                    <div className="absolute inset-x-1.5 bottom-1.5 flex items-center overflow-hidden rounded-2xl bg-white shadow-[0_6px_16px_rgba(23,34,53,0.14)] lg:inset-x-3 lg:bottom-3">
+                      <span className="relative grid h-11 w-10 shrink-0 place-items-center bg-brand text-white lg:h-14 lg:w-14">
+                        <span className="absolute top-0 right-0 h-full w-2.5 bg-accent lg:w-3" style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }} />
+                        <Icon name={label.icon} className="relative h-5 w-5 lg:h-6 lg:w-6" />
+                      </span>
+                      <span className="min-w-0 flex-1 px-1.5 text-[10px] leading-[1.15] font-extrabold tracking-tight text-brand uppercase lg:px-3 lg:text-sm lg:leading-5">
                         <span className="block truncate">{label.lines[0]}</span>
                         {label.lines[1] ? <span className="block truncate">{label.lines[1]}</span> : null}
                       </span>
-                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent lg:h-9 lg:w-9">
+                      <span className="mr-1.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-white lg:mr-2 lg:h-9 lg:w-9">
                         <Icon name="chevron" className="h-3.5 w-3.5 lg:h-5 lg:w-5" />
                       </span>
                     </div>
