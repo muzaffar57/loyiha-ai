@@ -52,7 +52,7 @@ function CategoryBody({ slug, query }: { slug: string; query: string }) {
       <PageHeader title={category.name} back />
       <div className="mt-2 overflow-hidden rounded-3xl border border-line">
         <div className="relative aspect-[2/3] bg-white">
-          {image ? <img src={image} alt="" className="absolute inset-0 w-full object-contain" style={{ height: "100%" }} /> : <CategoryArt slug={category.slug} />}
+          {image ? <img src={image} alt="" className="absolute inset-0 w-full object-cover" style={{ height: "100%" }} /> : <CategoryArt slug={category.slug} />}
         </div>
       </div>
       {category.parent ? (

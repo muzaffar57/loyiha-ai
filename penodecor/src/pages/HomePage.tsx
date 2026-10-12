@@ -70,7 +70,7 @@ function HomeCatalog({ state, onRetry }: { state: StoreLoad<{ items: StoreCatego
                 <Link to={`/katalog/${category.slug}`} className="flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-card)]">
                   <div className="relative aspect-[2/3] bg-white">
                     {src ? (
-                      <img src={src} alt="" className="absolute inset-0 w-full object-contain" style={{ height: "100%", maxWidth: "none" }} />
+                      <img src={src} alt="" className="absolute inset-0 w-full object-cover" style={{ height: "100%", maxWidth: "none" }} />
                     ) : (
                       <CategoryArt slug={category.slug} />
                     )}
