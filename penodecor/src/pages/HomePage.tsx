@@ -92,14 +92,14 @@ function HomeCatalog({ state, onRetry }: { state: StoreLoad<{ items: StoreCatego
                     ) : (
                       <CategoryArt slug={category.slug} />
                     )}
-                    <div className="absolute inset-x-2 bottom-2 flex items-center gap-1.5 rounded-2xl bg-brand py-1.5 pr-1.5 pl-2 text-white">
-                      <Icon name={label.icon} className="h-5 w-5 shrink-0" />
-                      <span className="min-w-0 flex-1 text-[10px] leading-[1.15] font-bold tracking-wide uppercase">
-                        <span className="block">{label.lines[0]}</span>
-                        {label.lines[1] ? <span className="block">{label.lines[1]}</span> : null}
+                    <div className="absolute inset-x-1.5 bottom-1.5 flex items-center gap-1 rounded-xl bg-brand py-1 pr-1 pl-1.5 text-white lg:inset-x-3 lg:bottom-3 lg:gap-2 lg:rounded-2xl lg:py-2 lg:pr-2 lg:pl-3">
+                      <Icon name={label.icon} className="h-4 w-4 shrink-0 lg:h-6 lg:w-6" />
+                      <span className="min-w-0 flex-1 text-[9px] leading-[1.15] font-bold tracking-tight uppercase lg:text-sm lg:leading-5 lg:tracking-wide">
+                        <span className="block truncate">{label.lines[0]}</span>
+                        {label.lines[1] ? <span className="block truncate">{label.lines[1]}</span> : null}
                       </span>
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent">
-                        <Icon name="chevron" className="h-3.5 w-3.5" />
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent lg:h-9 lg:w-9">
+                        <Icon name="chevron" className="h-3.5 w-3.5 lg:h-5 lg:w-5" />
                       </span>
                     </div>
                   </div>
