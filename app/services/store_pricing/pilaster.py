@@ -1,7 +1,8 @@
 """Pilastr va to‘g‘ri ustun.
 
-Tana = aniq en × qalinlik metr narxi × uzunlik × miqdor.
-Kapital va baza har bir ustun uchun alohida qo‘shiladi. Interpolyatsiya yo‘q.
+Tana kub narxidan chiqadi. 1 metr kub = (en sm / 100) × (qalinlik sm / 100).
+Kub narxi shu en va qalinlik uchun kiritilgan kub_price. Interpolyatsiya yo‘q.
+Kapital va baza har bir ustun uchun alohida qo‘shiladi.
 """
 from decimal import Decimal
 
@@ -26,7 +27,9 @@ def quote_pilaster(config: dict, *, selection: PilasterInput, quantity: int) -> 
         "Qalinlik 3, 3.5, 4, 4.5, 5, 5.5 yoki 6 sm bo‘lishi kerak.",
     )
     length = parse_request_decimal(selection.length_m, field="Uzunlik")
-    meter = _meter_price(config, width, thickness)
+    kub_price = _kub_price(config, width, thickness)
+    kub = (width / Decimal("100")) * (thickness / Decimal("100"))
+    meter = quantize_money(kub * kub_price)
     capital = _optional_piece(selection.capital, config.get("capitals"), kind="Kapital")
     base = _optional_piece(selection.base, config.get("bases"), kind="Baza")
 
@@ -37,7 +40,7 @@ def quote_pilaster(config: dict, *, selection: PilasterInput, quantity: int) -> 
                 code="body",
                 label="Tana",
                 amount=quantize_money(meter * length * count),
-                detail=f"{money_text(meter)} so‘m/m × {measure_text(length)} m × {qty} dona",
+                detail=f"{measure_text(kub)} kub/m × {money_text(kub_price)} so‘m × {measure_text(length)} m × {qty} dona",
             )
         ]
         if capital is not None:
@@ -66,6 +69,8 @@ def quote_pilaster(config: dict, *, selection: PilasterInput, quantity: int) -> 
         "thickness_cm": measure_text(thickness),
         "length_m": measure_text(length),
         "quantity": str(quantity),
+        "kub_per_meter": measure_text(kub),
+        "kub_price": money_text(kub_price) or "",
         "meter_price": money_text(meter) or "",
         "unit": "piece",
     }
@@ -83,17 +88,17 @@ def _allowed(value: Decimal, options: tuple[Decimal, ...], message: str) -> Deci
     raise invalid(message)
 
 
-def _meter_price(config: dict, width: Decimal, thickness: Decimal) -> Decimal:
-    table = config.get("meter_prices")
+def _kub_price(config: dict, width: Decimal, thickness: Decimal) -> Decimal:
+    table = config.get("kub_prices")
     if not isinstance(table, dict):
-        raise not_configured("Bu en va qalinlik uchun metr narxi kiritilmagan.")
+        raise not_configured("Bu en va qalinlik uchun kub narxi kiritilmagan.")
     nested = _match_key(table, width)
     if not isinstance(nested, dict):
-        raise not_configured("Bu en va qalinlik uchun metr narxi kiritilmagan.")
+        raise not_configured("Bu en va qalinlik uchun kub narxi kiritilmagan.")
     raw = _match_key(nested, thickness)
     if raw is None:
-        raise not_configured("Bu en va qalinlik uchun metr narxi kiritilmagan.")
-    return read_money(raw, field="meter_price", positive=True)
+        raise not_configured("Bu en va qalinlik uchun kub narxi kiritilmagan.")
+    return read_money(raw, field="kub_price", positive=True)
 
 
 def _match_key(table: dict, target: Decimal) -> object | None:

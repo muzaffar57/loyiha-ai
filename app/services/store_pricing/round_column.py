@@ -2,6 +2,7 @@
 
 Narx yakuniy tashqi diametrga bog‘lanadi. Qoplama koeffitsiyenti shu qoidadan olinadi.
 Kapital va baza oralig‘i [min, max) — chegaralar ustma-ust tushmaydi.
+Diametr oralig‘i bo‘sh bo‘lsa, narx bitta dona narx: diametrga qarab o‘zgarmaydi.
 """
 from dataclasses import dataclass
 from decimal import Decimal
@@ -127,7 +128,32 @@ def _piece_price(table: object, name: str | None, diameter: Decimal, *, kind: st
         return None
     if not isinstance(table, dict) or name not in table:
         raise not_configured(f"{kind} narxi kiritilmagan.")
-    return _band_price(_bands(table[name], field=name), diameter, kind=kind)
+    raw = table[name]
+    flat = _flat_piece_price(raw, kind=kind)
+    if flat is not None:
+        return flat
+    return _band_price(_bands(raw, field=name), diameter, kind=kind)
+
+
+def _flat_piece_price(raw: object, *, kind: str) -> Decimal | None:
+    if isinstance(raw, str):
+        return read_money(raw, field=kind)
+    if not isinstance(raw, list) or len(raw) != 1 or not isinstance(raw[0], dict):
+        return None
+    item = raw[0]
+    if not _diameter_blank(item.get("min_diameter_cm")) or not _diameter_blank(item.get("max_diameter_cm")):
+        return None
+    if "price" not in item:
+        return None
+    return read_money(item.get("price"), field=kind)
+
+
+def _diameter_blank(value: object) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip() == ""
+    return False
 
 
 def _bands(raw: object, *, field: str) -> list[_Band]:

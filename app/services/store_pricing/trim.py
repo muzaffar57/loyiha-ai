@@ -1,7 +1,8 @@
 """Rom va eshik bezagi.
 
-Komplekt = tanlangan komponentlar. Avtomatik chegirma yo‘q.
-Qo‘shimcha metr faqat shu komponentning metr narxiga ko‘payadi.
+Komplekt narxi o‘lchamdagi set_price. Tanlangan komponentlar soni bu narxni
+o‘zgartirmaydi. Avtomatik chegirma yo‘q. Qo‘shimcha metr faqat shu
+komponentning metr narxiga ko‘payadi.
 """
 import re
 from decimal import Decimal
@@ -46,14 +47,10 @@ def quote_trim(config: dict, *, category_slug: str, selection: TrimInput, quanti
         extra[key] = parse_request_decimal(raw, field="Qo‘shimcha uzunlik")
 
     size_row = _size_row(config, selection.size)
+    if "set_price" not in size_row:
+        raise not_configured("Komplekt narxi kiritilmagan.")
+    set_price = read_money(size_row["set_price"], field="set_price", positive=True)
     extra_table = size_row.get("extra_meter")
-    rates: dict[str, Decimal] = {}
-    for code in _ORDER:
-        if code not in components:
-            continue
-        if code not in size_row:
-            raise not_configured("Tanlangan komponent uchun narx kiritilmagan.")
-        rates[code] = read_money(size_row[code], field=code)
     extra_rates: dict[str, Decimal] = {}
     for code in _ORDER:
         if code not in extra:
@@ -71,21 +68,19 @@ def quote_trim(config: dict, *, category_slug: str, selection: TrimInput, quanti
             raise not_configured("Qo‘shimcha bezak narxi kiritilmagan.")
         addon_rates.append((code, read_money(addon_table[code], field=code)))
 
-    selected = [code for code in _ORDER if code in rates]
+    selected = [code for code in _ORDER if code in components]
 
     def build(qty: int) -> list[ComponentLine]:
         lines: list[ComponentLine] = []
         count = Decimal(qty)
-        for code in selected:
-            rate = rates[code]
-            lines.append(
-                ComponentLine(
-                    code=code,
-                    label=_LABELS[code],
-                    amount=quantize_money(rate * count),
-                    detail=f"{money_text(rate)} so‘m × {qty} dona",
-                )
+        lines.append(
+            ComponentLine(
+                code="set",
+                label="Komplekt",
+                amount=quantize_money(set_price * count),
+                detail=f"{money_text(set_price)} so‘m × {qty} dona",
             )
+        )
         for code in selected:
             if code not in extra_rates:
                 continue
@@ -119,6 +114,7 @@ def quote_trim(config: dict, *, category_slug: str, selection: TrimInput, quanti
             "size": selection.size,
             "quantity": str(quantity),
             "unit": "set",
+            "set_price": money_text(set_price) or "",
             "components": ",".join(selected),
             **({"addons": ",".join(code for code, _rate in addon_rates)} if addon_rates else {}),
         },
