@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     # asl narxdan davom etadi va Google Sheets chaqirilmaydi.
     STORE_SHEETS_SPREADSHEET_ID: str = ""
     STORE_SHEETS_CREDENTIALS_FILE: str = ""
+    STORE_SHEETS_CREDENTIALS_JSON: str = ""
     STORE_SHEETS_SYNC_TOKEN: str = ""
     STORE_SHEETS_SYNC_INTERVAL_SECONDS: int = 0
     STORE_SHEETS_STALE_AFTER_SECONDS: int = 86_400
