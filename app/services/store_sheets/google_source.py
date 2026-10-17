@@ -33,7 +33,8 @@ def urllib_opener(method: str, url: str, headers: dict[str, str], body: bytes | 
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read()
     except urllib.error.URLError:
-        raise SheetUnavailable() from None
+        logger.warning("store sheet network error")
+        raise SheetUnavailable("Google Sheets serveriga ulanib bo‘lmadi.") from None
 
 
 class GoogleSheetSource:
@@ -108,11 +109,13 @@ class GoogleSheetSource:
         if status in {400, 404}:
             raise SheetValidationError([f"{name}: varaq topilmadi."])
         if status != 200:
-            raise SheetUnavailable()
+            logger.warning("store sheet read status=%s", status)
+            raise SheetUnavailable(f"Google Sheets javobi: {status}.")
         try:
             data = json.loads(payload.decode() or "{}")
         except (UnicodeError, json.JSONDecodeError):
-            raise SheetUnavailable() from None
+            logger.warning("store sheet read body invalid")
+            raise SheetUnavailable("Google Sheets javobi o‘qilmadi.") from None
         values = data.get("values") if isinstance(data, dict) else None
         if values is None:
             return []
@@ -135,7 +138,7 @@ class GoogleSheetSource:
             if attempt < 2:
                 self.sleeper(_DELAYS[attempt])
         logger.warning("store sheet request failed status=%s", last_status)
-        raise SheetUnavailable()
+        raise SheetUnavailable(f"Google Sheets javobi: {last_status}.")
 
 
 def _account_from_source(raw_json: str, path: str) -> tuple[str, str]:
