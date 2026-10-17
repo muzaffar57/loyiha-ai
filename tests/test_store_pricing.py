@@ -25,16 +25,14 @@ TRIM = {
     "discount_percent": "10",
     "sizes": {
         "M": {
-            "cornice": "10000",
-            "jamb": "8000",
-            "sill": "5000",
+            "set_price": "23000",
             "extra_meter": {"cornice": "2000", "jamb": "2000", "sill": "1500"},
         }
     },
     "addons": {"kalvak": "3000", "karona": "4500"},
 }
 PILASTER = {
-    "meter_prices": {"30": {"4": "10000", "3.50": "9000"}, "25": {"4": "8000"}},
+    "kub_prices": {"30": {"4": "1000000", "3.50": "900000"}, "25": {"4": "800000"}},
     "capitals": {"klassik": "7000"},
     "bases": {"oddiy": "4000"},
 }
@@ -145,7 +143,9 @@ def test_trim_set_sums_component_prices():
     )
     assert quote.status == "PRICED"
     assert quote.currency == "UZS"
-    assert [item.amount for item in quote.components] == ["10000.00", "8000.00", "5000.00"]
+    assert [item.amount for item in quote.components] == ["23000.00"]
+    assert quote.components[0].code == "set"
+    assert quote.applied["set_price"] == "23000.00"
     assert quote.total == "23000.00"
     assert quote.subtotal == "23000.00"
     assert quote.requires_manual_quote is False
@@ -167,7 +167,7 @@ def test_trim_set_sums_component_prices():
             trim=TrimInput(size="M", components=["sill"], addons=["karona"]),
         ),
     )
-    assert karona.total == "9500.00"
+    assert karona.total == "27500.00"
     doubled = calculate_quote(
         product,
         _request(product, quantity=2, trim=TrimInput(size="M", components=["cornice", "jamb", "sill"])),
@@ -175,7 +175,7 @@ def test_trim_set_sums_component_prices():
     assert doubled.total == "46000.00"
 
 
-def test_removing_trim_component_reduces_total():
+def test_removing_trim_component_keeps_set_price():
     product = _trim_product()
     full = calculate_quote(
         product,
@@ -186,8 +186,9 @@ def test_removing_trim_component_reduces_total():
         _request(product, quantity=1, trim=TrimInput(size="M", components=["cornice", "jamb"])),
     )
     assert full.total == "23000.00"
-    assert without_sill.total == "18000.00"
-    assert Decimal(without_sill.total) == Decimal(full.total) - Decimal("5000.00")
+    assert without_sill.total == "23000.00"
+    assert without_sill.applied["set_price"] == "23000.00"
+    assert without_sill.applied["components"] == "cornice,jamb"
 
 
 def test_trim_extra_meters_use_component_meter_price():
@@ -245,7 +246,7 @@ def test_door_rejects_sill():
         product,
         _request(product, quantity=1, trim=TrimInput(size="M", components=["cornice", "jamb"])),
     )
-    assert allowed.total == "18000.00"
+    assert allowed.total == "23000.00"
     assert allowed.applied["opening"] == "door"
 
 
@@ -261,9 +262,11 @@ def test_pilaster_exact_width_and_thickness():
         ),
     )
     amounts = {item.code: item.amount for item in quote.components}
-    assert amounts == {"body": "60000.00", "capital": "21000.00", "base": "12000.00"}
-    assert quote.total == "93000.00"
-    assert quote.unit_price == "31000.00"
+    assert amounts == {"body": "72000.00", "capital": "21000.00", "base": "12000.00"}
+    assert quote.applied["kub_price"] == "1000000.00"
+    assert quote.applied["kub_per_meter"] == "0.012"
+    assert quote.total == "105000.00"
+    assert quote.unit_price == "35000.00"
 
     half = calculate_quote(
         product,
@@ -273,7 +276,9 @@ def test_pilaster_exact_width_and_thickness():
             pilaster=PilasterInput(width_cm="30.0", thickness_cm="3.5", length_m="1"),
         ),
     )
-    assert half.total == "9000.00"
+    assert half.total == "9450.00"
+    assert half.applied["kub_price"] == "900000.00"
+    assert half.applied["kub_per_meter"] == "0.0105"
 
 
 def test_pilaster_missing_combination_is_not_configured():
@@ -442,6 +447,34 @@ def test_round_diameter_band_boundaries():
     assert conflict.value.code == "CONFLICTING_RULES"
 
 
+def test_round_empty_diameter_range_is_one_piece_price():
+    flat = {
+        "meter_price": "10000",
+        "capitals": {"oddiy": "5000"},
+        "bases": {"oddiy": [{"price": "3000"}]},
+    }
+    product = _round_product(flat)
+    quote = calculate_quote(
+        product,
+        _request(product, quantity=2, round_column=_round_input(final_diameter_cm="80", capital="oddiy", base="oddiy")),
+    )
+    amounts = {item.code: item.amount for item in quote.components}
+    assert amounts["body"] == "40000.00"
+    assert amounts["capital"] == "10000.00"
+    assert amounts["base"] == "6000.00"
+    assert quote.total == "56000.00"
+
+    blank = {
+        "meter_price": "10000",
+        "capitals": {"oddiy": [{"min_diameter_cm": "", "max_diameter_cm": "  ", "price": "5000"}]},
+    }
+    same = calculate_quote(
+        _round_product(blank),
+        _request(product, quantity=1, round_column=_round_input(final_diameter_cm="12", capital="oddiy")),
+    )
+    assert next(item.amount for item in same.components if item.code == "capital") == "5000.00"
+
+
 def test_cornice_scales_from_20cm_cube():
     category = _category("shift-karnizlari", category_id=1)
     product = _product(
@@ -569,7 +602,7 @@ def test_inactive_rule_is_not_used():
     category = _category("pilastrlar", category_id=1)
     inactive = _rule(
         StorePricingRuleType.DIMENSION_COMBINATION,
-        {"meter_prices": {"30": {"4": "99999"}}, "capitals": {}, "bases": {}},
+        {"kub_prices": {"30": {"4": "99999"}}, "capitals": {}, "bases": {}},
         active=False,
         rule_id=1,
     )
@@ -582,7 +615,7 @@ def test_inactive_rule_is_not_used():
     active = _rule(StorePricingRuleType.DIMENSION_COMBINATION, PILASTER, rule_id=2)
     category.pricing_rules = [active]
     priced = calculate_quote(product, request)
-    assert priced.total == "20000.00"
+    assert priced.total == "24000.00"
     assert priced.applied["rule_id"] == "2"
 
     product.pricing_rules = [
@@ -633,7 +666,7 @@ def test_invalid_measurements_are_rejected():
 
 def test_config_float_is_rejected():
     category = _category("pilastrlar", category_id=1)
-    config = {"meter_prices": {"30": {"4": 10000.0}}}
+    config = {"kub_prices": {"30": {"4": 10000.0}}}
     product = _product(category, unit=StoreUnit.PIECE, rules=[_rule(StorePricingRuleType.DIMENSION_COMBINATION, config)])
     with pytest.raises(PricingError) as error:
         calculate_quote(
@@ -804,7 +837,7 @@ def test_pricing_endpoint_rejects_bad_input_and_inactive_rules(store_client):
                     product_id=inactive_product.id,
                     rule_type=StorePricingRuleType.DIMENSION_COMBINATION,
                     name="Yopiq narx",
-                    config={"meter_prices": {"30": {"4": "99999"}}},
+                    config={"kub_prices": {"30": {"4": "99999"}}},
                     is_active=False,
                 )
             )
@@ -813,7 +846,7 @@ def test_pricing_endpoint_rejects_bad_input_and_inactive_rules(store_client):
                     product_id=active_product.id,
                     rule_type=StorePricingRuleType.DIMENSION_COMBINATION,
                     name="Faol narx",
-                    config={"meter_prices": {"30": {"4": "10000"}}},
+                    config={"kub_prices": {"30": {"4": "1000000"}}},
                     is_active=True,
                 )
             )

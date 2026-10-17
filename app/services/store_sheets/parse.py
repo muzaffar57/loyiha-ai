@@ -209,20 +209,13 @@ def _rom(rows: list[tuple[int, dict[str, str]]], errors: _Errors) -> list[RuleDr
                 broken = True
                 break
             seen_sizes.add(size)
-            prices: dict[str, str] = {}
-            for code, column in (("cornice", "cornice_price"), ("jamb", "jamb_price"), ("sill", "sill_price")):
-                if opening == "door" and code == "sill" and row[column]:
-                    errors.add(ROM_SHEET, row_number, "eshik modelida podokonnik bo‘lmaydi.")
-                    broken = True
-                    break
-                parsed = _price(row[column], ROM_SHEET, row_number, errors, required=False)
-                if parsed == "":
-                    broken = True
-                    break
-                if parsed is not None:
-                    prices[code] = parsed
-            if broken:
+            parsed_set = _price(row["set_price"], ROM_SHEET, row_number, errors, required=True)
+            if not parsed_set:
+                if not row["set_price"].strip():
+                    errors.add(ROM_SHEET, row_number, "komplekt narxi kerak.")
+                broken = True
                 break
+            prices: dict[str, str | dict[str, str]] = {"set_price": parsed_set}
             extra: dict[str, str] = {}
             for code, column in (
                 ("cornice", "extra_meter_cornice"),
@@ -240,10 +233,6 @@ def _rom(rows: list[tuple[int, dict[str, str]]], errors: _Errors) -> list[RuleDr
                 if parsed is not None:
                     extra[code] = parsed
             if broken:
-                break
-            if not prices:
-                errors.add(ROM_SHEET, row_number, "kamida bitta komponent narxi kerak.")
-                broken = True
                 break
             if extra:
                 prices["extra_meter"] = extra
@@ -310,22 +299,24 @@ def _one_pilaster(slug: str, group: list[tuple[int, dict[str, str]]], errors: _E
     if len(models) != 1 or not next(iter(models)) or None in active or len(active) != 1:
         errors.add(PILASTER_SHEET, group[0][0], "model va faollik bir xil bo‘lishi kerak.")
         return None
-    meter_prices: dict[str, dict[str, str]] = {}
+    kub_prices: dict[str, dict[str, str]] = {}
     capitals: dict[str, str] = {}
     bases: dict[str, str] = {}
     seen: set[tuple[str, str]] = set()
     for row_number, row in group:
         width = _choice(row["width_cm"], WIDTHS, PILASTER_SHEET, row_number, "en", errors)
         thickness = _choice(row["thickness_cm"], THICKNESS, PILASTER_SHEET, row_number, "qalinlik", errors)
-        price = _price(row["meter_price"], PILASTER_SHEET, row_number, errors, required=True)
+        price = _price(row["kub_price"], PILASTER_SHEET, row_number, errors, required=True)
         if not width or not thickness or not price:
+            if width and thickness and not row["kub_price"].strip():
+                errors.add(PILASTER_SHEET, row_number, "kub narxi kerak.")
             return None
         pair = (width, thickness)
         if pair in seen:
             errors.add(PILASTER_SHEET, row_number, "en va qalinlik kombinatsiyasi takrorlangan.")
             return None
         seen.add(pair)
-        meter_prices.setdefault(width, {})[thickness] = price
+        kub_prices.setdefault(width, {})[thickness] = price
         if not _named_price(row["capital_model"], row["capital_price"], capitals, PILASTER_SHEET, row_number, errors):
             return None
         if not _named_price(row["base_model"], row["base_price"], bases, PILASTER_SHEET, row_number, errors):
@@ -334,7 +325,7 @@ def _one_pilaster(slug: str, group: list[tuple[int, dict[str, str]]], errors: _E
         product_slug=slug,
         rule_type=StorePricingRuleType.DIMENSION_COMBINATION,
         name=next(iter(models))[:160],
-        config={"family": "pilaster", "meter_prices": meter_prices, "capitals": capitals, "bases": bases},
+        config={"family": "pilaster", "kub_prices": kub_prices, "capitals": capitals, "bases": bases},
         is_active=True in active,
     )
 
@@ -371,8 +362,8 @@ def _one_round(slug: str, group: list[tuple[int, dict[str, str]]], errors: _Erro
             return None
     if not meter:
         return None
-    capitals: dict[str, list[dict[str, str]]] = {}
-    bases: dict[str, list[dict[str, str]]] = {}
+    capitals: dict[str, str | list[dict[str, str]]] = {}
+    bases: dict[str, str | list[dict[str, str]]] = {}
     for row_number, row in group:
         if not _band(row, "capital", capitals, row_number, errors):
             return None
@@ -590,30 +581,59 @@ def _multiplier(value: str, row_number: int, errors: _Errors) -> str | None:
     return rendered
 
 
-def _band(row: dict[str, str], prefix: str, target: dict[str, list[dict[str, str]]], row_number: int, errors: _Errors) -> bool:
+def _band(row: dict[str, str], prefix: str, target: dict[str, str | list[dict[str, str]]], row_number: int, errors: _Errors) -> bool:
     model = row[f"{prefix}_model"].strip()
     minimum = row[f"{prefix}_min_diameter_cm"].strip()
     maximum = row[f"{prefix}_max_diameter_cm"].strip()
     price = row[f"{prefix}_price"].strip()
     if not model and not minimum and not maximum and not price:
         return True
+    parsed_price = _price(price, ROUND_SHEET, row_number, errors, required=True) if price else ""
+    if not model or not parsed_price:
+        errors.add(ROUND_SHEET, row_number, f"{prefix} modeli va narxi birga kiritilishi kerak.")
+        return False
+    if not minimum and not maximum:
+        return _store_flat_piece(target, model, parsed_price, row_number, errors)
     parsed_min = _measure(minimum, ROUND_SHEET, row_number, errors) if minimum else None
     parsed_max = _measure(maximum, ROUND_SHEET, row_number, errors) if maximum else None
-    parsed_price = _price(price, ROUND_SHEET, row_number, errors, required=True) if price else ""
-    if not model or not parsed_min or not parsed_max or not parsed_price:
-        errors.add(ROUND_SHEET, row_number, f"{prefix} modeli, oralig‘i va narxi birga kiritilishi kerak.")
+    if not parsed_min or not parsed_max:
+        errors.add(ROUND_SHEET, row_number, "diametr oralig‘i to‘liq yoki butunlay bo‘sh bo‘lishi kerak.")
         return False
     if Decimal(parsed_max) <= Decimal(parsed_min):
         errors.add(ROUND_SHEET, row_number, "diametr oralig‘i noto‘g‘ri.")
         return False
-    target.setdefault(model, []).append(
-        {"min_diameter_cm": parsed_min, "max_diameter_cm": parsed_max, "price": parsed_price}
-    )
+    current = target.get(model)
+    if isinstance(current, str):
+        errors.add(ROUND_SHEET, row_number, "bo‘sh diametr oralig‘i va oraliq narx aralashmasin.")
+        return False
+    bands = current if isinstance(current, list) else []
+    bands.append({"min_diameter_cm": parsed_min, "max_diameter_cm": parsed_max, "price": parsed_price})
+    target[model] = bands
     return True
 
 
-def _bands_ok(groups: dict[str, list[dict[str, str]]], kind: str, row_number: int, errors: _Errors) -> bool:
+def _store_flat_piece(
+    target: dict[str, str | list[dict[str, str]]],
+    model: str,
+    price: str,
+    row_number: int,
+    errors: _Errors,
+) -> bool:
+    current = target.get(model)
+    if isinstance(current, list):
+        errors.add(ROUND_SHEET, row_number, "bo‘sh diametr oralig‘i va oraliq narx aralashmasin.")
+        return False
+    if isinstance(current, str) and current != price:
+        errors.add(ROUND_SHEET, row_number, "bir xil model narxi boshqacha kiritilgan.")
+        return False
+    target[model] = price
+    return True
+
+
+def _bands_ok(groups: dict[str, str | list[dict[str, str]]], kind: str, row_number: int, errors: _Errors) -> bool:
     for model, bands in groups.items():
+        if isinstance(bands, str):
+            continue
         ordered = sorted(bands, key=lambda item: (Decimal(item["min_diameter_cm"]), Decimal(item["max_diameter_cm"])))
         for previous, nxt in zip(ordered, ordered[1:]):
             if Decimal(nxt["min_diameter_cm"]) < Decimal(previous["max_diameter_cm"]):

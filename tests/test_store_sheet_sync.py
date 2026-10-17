@@ -77,7 +77,7 @@ def _trim_product(extra: dict | None = None) -> StoreProduct:
     config = {
         "family": "trim_set",
         "opening": "window",
-        "sizes": {"M": {"cornice": "10000", "jamb": "8000", "sill": "5000"}},
+        "sizes": {"M": {"set_price": "23000"}},
         "addons": {},
     }
     config.update(extra or {})
@@ -177,6 +177,10 @@ def test_old_sheet_configuration_is_marked_stale(monkeypatch: pytest.MonkeyPatch
         last_success_at=now,
     )
     assert settings_are_stale(fresh, now=now) is False
+    monkeypatch.setattr(settings, "STORE_SHEETS_CREDENTIALS_FILE", "")
+    monkeypatch.setattr(settings, "STORE_SHEETS_CREDENTIALS_JSON", "present")
+    assert settings_are_stale(old, now=now) is True
+    monkeypatch.setattr(settings, "STORE_SHEETS_CREDENTIALS_JSON", "")
     monkeypatch.setattr(settings, "STORE_SHEETS_SPREADSHEET_ID", "")
     assert settings_are_stale(old, now=now) is False
 
@@ -200,7 +204,7 @@ def test_adjustment_does_not_compound_or_touch_cost_or_coating():
     second = calculate_quote(trim, request, adjustment_percent=Decimal("10"))
     assert first.subtotal == "23000.00"
     assert first.total == second.total == "25300.00"
-    assert [line.amount for line in first.components] == ["10000.00", "8000.00", "5000.00"]
+    assert [line.amount for line in first.components] == ["23000.00"]
     assert trim.pricing_rules[0].config["manufacturing_cost"] == "1000"
     assert trim.pricing_rules[0].config["cost_price"] == "2000"
     assert first.applied["global_price_adjustment_percent"] == "10"
@@ -265,7 +269,7 @@ def test_invalid_sheet_rows_are_rejected_before_activation():
     with pytest.raises(SheetValidationError):
         parse_workbook(_workbook(percent="chegirma"))
     negative = _workbook()
-    price_column = negative[ROM_SHEET][0].index("cornice_price")
+    price_column = negative[ROM_SHEET][0].index("set_price")
     negative[ROM_SHEET][1][price_column] = "-10"
     with pytest.raises(SheetValidationError):
         parse_workbook(negative)
@@ -283,6 +287,23 @@ def test_invalid_sheet_rows_are_rejected_before_activation():
     with pytest.raises(SheetValidationError) as error:
         parse_workbook(overlap)
     assert "ustma-ust" in error.value.message
+    flat = _workbook()
+    flat[ROUND_SHEET][1] = ["ustun-1", "Silindr", "10000", "1.5", "oddiy", "", "", "5000", "oddiy", "", "", "3000", "true"]
+    parsed = parse_workbook(flat)
+    column = next(rule for rule in parsed.rules if rule.product_slug == "ustun-1")
+    assert column.config["capitals"]["oddiy"] == "5000.00"
+    assert column.config["bases"]["oddiy"] == "3000.00"
+    mixed = _workbook()
+    mixed[ROUND_SHEET][1] = ["ustun-1", "Silindr", "10000", "1.5", "oddiy", "", "", "5000", "", "", "", "", "true"]
+    mixed[ROUND_SHEET].append(["ustun-1", "Silindr", "10000", "1.5", "oddiy", "25", "30", "7000", "", "", "", "", "true"])
+    with pytest.raises(SheetValidationError) as mixed_error:
+        parse_workbook(mixed)
+    assert "aralashmasin" in mixed_error.value.message
+    partial = _workbook()
+    partial[ROUND_SHEET][1] = ["ustun-1", "Silindr", "10000", "1.5", "oddiy", "25", "", "5000", "", "", "", "", "true"]
+    with pytest.raises(SheetValidationError) as partial_error:
+        parse_workbook(partial)
+    assert "butunlay bo‘sh" in partial_error.value.message
     missing = _workbook()
     del missing[SETTINGS_SHEET]
     with pytest.raises(SheetValidationError):
@@ -343,6 +364,18 @@ def test_google_source_does_not_call_network_or_write(tmp_path: Path):
     with pytest.raises(SheetUnavailable) as missing_error:
         missing.fetch()
     assert "private_key" not in str(missing_error.value)
+
+    inline = GoogleSheetSource(
+        spreadsheet_id="spreadsheet-id",
+        credentials_file="",
+        credentials_json=account.read_text(encoding="utf-8"),
+        opener=local_opener,
+        sleeper=lambda _delay: None,
+    )
+    inline_tables = inline.fetch()
+    assert set(inline_tables) == set(SHEET_COLUMNS)
+    assert "pyjwt[crypto]==2.10.1" in Path("requirements.txt").read_text(encoding="utf-8")
+    assert "STORE_SHEETS_CREDENTIALS_JSON" in Path("app/services/store_sheets/google_source.py").read_text(encoding="utf-8")
 
 
 def test_sheet_contract_and_migration_do_not_touch_freight():
@@ -420,7 +453,7 @@ def test_valid_sheet_updates_base_prices_and_bad_sheet_keeps_them(sheet_client, 
     _assert_base_prices(factory, ready="500000.00", stock="1500.50", percent=Decimal("0"))
 
     bad = _workbook(percent="25")
-    bad[ROM_SHEET][1][bad[ROM_SHEET][0].index("cornice_price")] = "-1"
+    bad[ROM_SHEET][1][bad[ROM_SHEET][0].index("set_price")] = "-1"
     source.tables = bad
     rejected = client.post("/api/store/pricing/sync", headers=_auth())
     assert rejected.status_code == 409
@@ -545,11 +578,11 @@ def _workbook(percent: str = "10") -> dict[str, list[list[str]]]:
         ],
         ROM_SHEET: [
             list(ROM_COLUMNS),
-            ["rom-1", "Klassik", "window", "M", "10000", "8000", "5000", "", "2000", "", "kalvak", "3000", "", "", "true"],
+            ["rom-1", "Klassik", "window", "M", "23000", "", "2000", "", "kalvak", "3000", "", "", "true"],
         ],
         PILASTER_SHEET: [
             list(PILASTER_COLUMNS),
-            ["pilastr-1", "Klassik", "30", "4", "10000", "klassik", "7000", "oddiy", "4000", "true"],
+            ["pilastr-1", "Klassik", "30", "4", "1000000", "klassik", "7000", "oddiy", "4000", "true"],
         ],
         ROUND_SHEET: [
             list(ROUND_COLUMNS),
@@ -652,7 +685,10 @@ def _assert_base_prices(factory, *, ready: str, stock: str, percent: Decimal) ->
             assert rule.config["manufacturing_cost"] == "1000"
             assert rule.config["cost_price"] == "2000"
             assert rule.config["sizes"]["S"]["cornice"] == "111.00"
-            assert rom_rule.config["sizes"]["M"]["cornice"] == "10000.00"
+            assert rom_rule.config["sizes"]["M"]["set_price"] == "23000.00"
+            pilaster = await session.scalar(select(StoreProduct).where(StoreProduct.slug == "pilastr-1"))
+            pilaster_rule = await session.scalar(select(StorePricingRule).where(StorePricingRule.product_id == pilaster.id))
+            assert pilaster_rule.config["kub_prices"]["30"]["4"] == "1000000.00"
             assert "manufacturing_cost" not in rom_rule.config
             assert Decimal(str(settings_row.global_price_adjustment_percent)) == percent
 
@@ -703,7 +739,8 @@ def _assert_quotes(client: TestClient, factory, *, percent: str) -> None:
     rom_body = rom.json()
     assert rom_body["subtotal"] == "23000.00"
     assert rom_body["total"] == "25300.00"
-    assert [item["amount"] for item in rom_body["components"]] == ["10000.00", "8000.00", "5000.00"]
+    assert [item["amount"] for item in rom_body["components"]] == ["23000.00"]
+    assert rom_body["applied"]["set_price"] == "23000.00"
     assert rom_body["applied"]["global_price_adjustment_percent"] == percent
     assert TOKEN not in rom.text
 
@@ -715,8 +752,9 @@ def _assert_quotes(client: TestClient, factory, *, percent: str) -> None:
             "pilaster": {"width_cm": "30", "thickness_cm": "4", "length_m": "2"},
         },
     )
-    assert pilaster.json()["subtotal"] == "20000.00"
-    assert pilaster.json()["total"] == "22000.00"
+    assert pilaster.json()["subtotal"] == "24000.00"
+    assert pilaster.json()["total"] == "26400.00"
+    assert pilaster.json()["applied"]["kub_price"] == "1000000.00"
     missing = client.post(
         "/api/store/pricing/calculate",
         json={

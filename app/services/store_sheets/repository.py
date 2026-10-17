@@ -16,7 +16,8 @@ from app.services.store_pricing.adjustment import percent_is_valid
 
 
 def sheets_configured() -> bool:
-    return bool(settings.STORE_SHEETS_SPREADSHEET_ID.strip() and settings.STORE_SHEETS_CREDENTIALS_FILE.strip())
+    credentials = settings.STORE_SHEETS_CREDENTIALS_FILE.strip() or settings.STORE_SHEETS_CREDENTIALS_JSON.strip()
+    return bool(settings.STORE_SHEETS_SPREADSHEET_ID.strip() and credentials)
 
 
 def sheet_loop_enabled() -> bool:

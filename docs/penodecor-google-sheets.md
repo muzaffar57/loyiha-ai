@@ -19,6 +19,7 @@ Qiymatlarni repoga yozmang. Nomlari:
 
 - `STORE_SHEETS_SPREADSHEET_ID` — jadval identifikatori
 - `STORE_SHEETS_CREDENTIALS_FILE` — service account JSON faylining serverdagi yo‘li
+- `STORE_SHEETS_CREDENTIALS_JSON` — shu hisobning JSON matni. Fayl yo‘li bo‘sh bo‘lsa shu o‘qiladi. Qiymatni repoga yozmang
 - `STORE_SHEETS_SYNC_TOKEN` — qo‘lda sinxronlash uchun alohida kalit. Yuk tashish admin JWT ishlatilmaydi
 - `STORE_SHEETS_SYNC_INTERVAL_SECONDS` — fon sinxroni. `0` bo‘lsa faqat qo‘lda. 60 dan kichik bo‘lsa ham kutish kamida 60 soniya
 - `STORE_SHEETS_STALE_AFTER_SECONDS` — oxirgi muvaffaqiyatli sinxron bundan eski bo‘lsa, hisob eskirgan deb belgilanadi
@@ -45,18 +46,21 @@ mos kelishi kerak.
 
 ### Rom_Eshik
 
-`product_slug`, `model`, `opening`, `size`, `cornice_price`, `jamb_price`,
-`sill_price`, `extra_meter_cornice`, `extra_meter_jamb`, `extra_meter_sill`,
+`product_slug`, `model`, `opening`, `size`, `set_price`,
+`extra_meter_cornice`, `extra_meter_jamb`, `extra_meter_sill`,
 `addon_1_code`, `addon_1_price`, `addon_2_code`, `addon_2_price`, `is_active`
 
-`opening`: `window` yoki `door`. `size`: `S`, `M`, `L`. Eshik qatorida podokonnik
-bo‘lmaydi. Bir mahsulotning o‘lchamlari alohida qator.
+`set_price` — shu o‘lchamdagi komplekt narxi. Tanlangan komponentlar soni bu
+narxni o‘zgartirmaydi. `opening`: `window` yoki `door`. `size`: `S`, `M`, `L`.
+Eshik qatorida podokonnikning qo‘shimcha metri bo‘lmaydi. Bir mahsulotning
+o‘lchamlari alohida qator.
 
 ### Pilastrlar
 
-`product_slug`, `model`, `width_cm`, `thickness_cm`, `meter_price`,
+`product_slug`, `model`, `width_cm`, `thickness_cm`, `kub_price`,
 `capital_model`, `capital_price`, `base_model`, `base_price`, `is_active`
 
+`kub_price` — 1 kub narxi. 1 metr kub = (en sm / 100) × (qalinlik sm / 100).
 En faqat 25, 30, 35, 40, 45, 50. Qalinlik faqat 3, 3.5, 4, 4.5, 5, 5.5, 6.
 Ro‘yxatda yo‘q juftlik narxi taxmin qilinmaydi.
 
@@ -68,7 +72,8 @@ Ro‘yxatda yo‘q juftlik narxi taxmin qilinmaydi.
 `is_active`
 
 Diametr oralig‘i `[min, max)`. Oralig‘lar ustma-ust tushmasligi kerak.
-Qoplama koeffitsiyenti umumiy foiz emas.
+Min va max ikkalasi ham bo‘sh bo‘lsa, narx bitta dona narx: diametrga qarab
+o‘zgarmaydi. Qoplama koeffitsiyenti umumiy foiz emas.
 
 ### Shift_Karnizlari
 
