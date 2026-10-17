@@ -42,18 +42,20 @@ class GoogleSheetSource:
         *,
         spreadsheet_id: str | None = None,
         credentials_file: str | None = None,
+        credentials_json: str | None = None,
         opener: Opener = urllib_opener,
         sleeper: Callable[[float], None] = time.sleep,
         timeout: float = 20,
     ) -> None:
         self.spreadsheet_id = spreadsheet_id if spreadsheet_id is not None else settings.STORE_SHEETS_SPREADSHEET_ID
         self.credentials_file = credentials_file if credentials_file is not None else settings.STORE_SHEETS_CREDENTIALS_FILE
+        self.credentials_json = credentials_json if credentials_json is not None else settings.STORE_SHEETS_CREDENTIALS_JSON
         self.opener = opener
         self.sleeper = sleeper
         self.timeout = timeout
 
     def fetch(self) -> dict[str, list[list[str]]]:
-        if not self.spreadsheet_id.strip() or not self.credentials_file.strip():
+        if not self.spreadsheet_id.strip() or not (self.credentials_file.strip() or self.credentials_json.strip()):
             raise SheetUnavailable("Google Sheets sozlanmagan.")
         token = self._access_token()
         tables: dict[str, list[list[str]]] = {}
@@ -62,7 +64,7 @@ class GoogleSheetSource:
         return tables
 
     def _access_token(self) -> str:
-        email, private_key = _load_account(self.credentials_file)
+        email, private_key = _account_from_source(self.credentials_json, self.credentials_file)
         now = int(time.time())
         assertion = jwt.encode(
             {
@@ -136,12 +138,26 @@ class GoogleSheetSource:
         raise SheetUnavailable()
 
 
+def _account_from_source(raw_json: str, path: str) -> tuple[str, str]:
+    if raw_json.strip():
+        try:
+            data = json.loads(raw_json)
+        except json.JSONDecodeError:
+            raise SheetUnavailable("Google Sheets hisob ma’lumoti topilmadi.") from None
+        return _account_fields(data)
+    return _load_account(path)
+
+
 def _load_account(path: str) -> tuple[str, str]:
     try:
         with open(path, encoding="utf-8") as handle:
             data = json.load(handle)
     except (OSError, json.JSONDecodeError, UnicodeError):
         raise SheetUnavailable("Google Sheets hisob ma’lumoti topilmadi.") from None
+    return _account_fields(data)
+
+
+def _account_fields(data: object) -> tuple[str, str]:
     email = data.get("client_email") if isinstance(data, dict) else None
     key = data.get("private_key") if isinstance(data, dict) else None
     if not isinstance(email, str) or not isinstance(key, str) or "BEGIN PRIVATE KEY" not in key:
